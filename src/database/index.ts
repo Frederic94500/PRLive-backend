@@ -6,7 +6,7 @@ export const dbConnection = async () => {
     url: `mongodb://${DB_HOST}:${DB_PORT}/${DB_DATABASE}`,
     options: {
       useNewUrlParser: true,
-      useUnifiedTopology: true
+      useUnifiedTopology: true,
     },
   };
 
@@ -15,4 +15,4 @@ export const dbConnection = async () => {
   }
 
   await connect(dbConfig.url, dbConfig.options);
-}
+};
