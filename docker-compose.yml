@@ -20,7 +20,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      DB_HOST: localhost
+      DB_HOST: 172.31.0.2
       DB_PORT: 27017
       DB_DATABASE: dev
     volumes:

@@ -1,5 +1,6 @@
-import { Song } from '@/interfaces/songs.interface';
-import { model, Document, Schema } from 'mongoose';
+import { Document, Schema, model } from 'mongoose';
+
+import { Song } from '@/interfaces/song.interface';
 
 const SongSchema: Schema = new Schema({
   artist: {
@@ -11,7 +12,7 @@ const SongSchema: Schema = new Schema({
     required: true,
   },
   url: {
-    type: URL,
+    type: String,
     required: true,
     unique: true,
   },

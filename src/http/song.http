@@ -1,0 +1,37 @@
+# baseURL
+@baseURL = http://localhost:3000
+
+###
+# Add song
+POST {{ baseURL }}/song/create
+Content-Type: application/json
+
+{
+    "artist": "LiSA",
+    "title": "Gurenge (紅蓮華)",
+    "url": "https://www.youtube.com/watch?v=MpYy6wwqxoo"
+}
+
+###
+POST {{ baseURL }}/song/create
+Content-Type: application/json
+
+{
+    "artist": "Hitsujibungaku",
+    "title": "more than words",
+    "url": "https://www.youtube.com/watch?v=pxI0I3NX3K0"
+}
+
+###
+POST {{ baseURL }}/song/create
+Content-Type: application/json
+
+{
+    "artist": "Kyrie（アイナ・ジ・エンド）",
+    "title": "キリエ・憐れみの讃歌",
+    "url": "https://www.youtube.com/watch?v=qLHoHf_WTVk"
+}
+
+###
+DELETE {{ baseURL }}/song/delete/65bae448a60989a84cc9eb60
+

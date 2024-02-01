@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsString, IsUrl } from 'class-validator';
+import { IsNotEmpty, IsString } from 'class-validator';
 
 export class CreateSongDto {
   @IsString()
@@ -9,7 +9,7 @@ export class CreateSongDto {
   @IsNotEmpty()
   public title: string;
 
-  @IsUrl()
+  @IsString()
   @IsNotEmpty()
-  public url: URL;
+  public url: string;
 }
