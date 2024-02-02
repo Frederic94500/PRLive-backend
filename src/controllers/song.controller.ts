@@ -10,9 +10,20 @@ export class SongController {
   public createSong = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const songData: Song = req.body;
-      const createSongData: Song = await this.song.createSong(songData);
+      await this.song.createSong(songData);
 
-      res.status(201).json({ data: createSongData, message: 'created' });
+      res.status(201).json({ message: 'created' });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getSongById = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const songId: string = req.params.id;
+      const findSongData: Song = await this.song.findSongById(songId);
+
+      res.status(200).json({ data: findSongData });
     } catch (error) {
       next(error);
     }
@@ -21,9 +32,9 @@ export class SongController {
   public deleteSong = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const songId: string = req.params.id;
-      const deleteSongData: Song = await this.song.deleteSong(songId);
+      await this.song.deleteSong(songId);
 
-      res.status(200).json({ data: deleteSongData, message: 'deleted' });
+      res.status(200).json({ message: 'deleted' });
     } catch (error) {
       next(error);
     }
