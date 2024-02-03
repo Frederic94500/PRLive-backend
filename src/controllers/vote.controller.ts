@@ -1,0 +1,20 @@
+import { NextFunction, Request, Response } from 'express';
+
+import Container from 'typedi';
+import { Vote } from '@/interfaces/vote.interface';
+import { VoteService } from '@/services/vote.service';
+
+export class VoteController {
+  public vote = Container.get(VoteService);
+
+  public castVote = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const voteData: Vote = req.body;
+      await this.vote.castVote(voteData);
+
+      res.status(201).json({ message: 'created' });
+    } catch (error) {
+      next(error);
+    }
+  };
+}
