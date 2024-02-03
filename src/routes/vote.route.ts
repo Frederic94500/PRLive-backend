@@ -15,5 +15,6 @@ export class VoteRoute implements Routes {
 
   private initializeRoutes() {
     this.router.post(`${this.path}/cast`, ValidationMiddleware(CreateVoteDto), this.voteController.castVote);
+    this.router.get(`${this.path}/avg`, this.voteController.getAverageVotes);
   }
 }

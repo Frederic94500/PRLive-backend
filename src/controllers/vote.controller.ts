@@ -17,4 +17,14 @@ export class VoteController {
       next(error);
     }
   };
+
+  public getAverageVotes = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const averageVotes: String = await this.vote.getAverageVotes();
+
+      res.status(200).json({ data: averageVotes });
+    } catch (error) {
+      next(error);
+    }
+  };
 }
