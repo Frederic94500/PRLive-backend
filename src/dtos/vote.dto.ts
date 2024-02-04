@@ -13,5 +13,5 @@ export class CreateVoteDto {
   @IsNotEmpty()
   @Min(1)
   @Max(10)
-  public vote: number;
+  public score: number;
 }

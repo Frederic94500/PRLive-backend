@@ -11,7 +11,7 @@ const VoteSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  vote: {
+  score: {
     type: Number,
     required: true,
   },
