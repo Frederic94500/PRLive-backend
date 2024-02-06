@@ -14,6 +14,16 @@ export class SongService {
     await SongModel.create(songData);
   }
 
+  public async randomSong(): Promise<Song> {
+    const findAllSongData: Song[] = await SongModel.find();
+    const randomSong: Song = findAllSongData[Math.floor(Math.random() * findAllSongData.length)];
+    if (!randomSong) {
+      throw new HttpException(404, `Song doesn't exist`);
+    }
+
+    return randomSong;
+  }
+
   public async findSongById(songId: string): Promise<Song> {
     const findSong: Song = await SongModel.findById(songId);
     if (!findSong) {

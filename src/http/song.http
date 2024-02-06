@@ -1,9 +1,9 @@
 # baseURL
-@baseURL = http://localhost:3000
+@baseURL = http://localhost:5000
 
 ###
 # Add song
-POST {{ baseURL }}/song/create
+POST {{ baseURL }}/api/song/create
 Content-Type: application/json
 
 {
@@ -13,7 +13,7 @@ Content-Type: application/json
 }
 
 ###
-POST {{ baseURL }}/song/create
+POST {{ baseURL }}/api/song/create
 Content-Type: application/json
 
 {
@@ -23,7 +23,7 @@ Content-Type: application/json
 }
 
 ###
-POST {{ baseURL }}/song/create
+POST {{ baseURL }}/api/song/create
 Content-Type: application/json
 
 {
@@ -33,5 +33,8 @@ Content-Type: application/json
 }
 
 ###
-DELETE {{ baseURL }}/song/delete/65bae448a60989a84cc9eb60
+GET {{ baseURL }}/api/song/get
+
+###
+DELETE {{ baseURL }}/api/song/delete/65bae448a60989a84cc9eb60
 

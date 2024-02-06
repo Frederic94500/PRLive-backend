@@ -18,6 +18,16 @@ export class SongController {
     }
   };
 
+  public getSong = async (req: Request, res: Response, next: NextFunction) => {
+    try {
+      const song: Song = await this.song.randomSong();
+
+      res.status(200).json({ data: song });
+    } catch (error) {
+      next(error);
+    }
+  };
+
   public getSongById = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const songId: string = req.params.id;
