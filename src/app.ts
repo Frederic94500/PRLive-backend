@@ -1,23 +1,29 @@
 import 'reflect-metadata';
+
+import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config';
+import { logger, stream } from '@utils/logger';
+
+import { ErrorMiddleware } from '@middlewares/error.middleware';
+import { Routes } from '@interfaces/routes.interface';
+import Strategy from 'passport-discord';
 import compression from 'compression';
 import cookieParser from 'cookie-parser';
 import cors from 'cors';
+import { dbConnection } from '@database';
 import express from 'express';
 import helmet from 'helmet';
 import hpp from 'hpp';
 import morgan from 'morgan';
+import passport from 'passport';
+import session from 'express-session';
 import swaggerJSDoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
-import { NODE_ENV, PORT, LOG_FORMAT, ORIGIN, CREDENTIALS } from '@config';
-import { dbConnection } from '@database';
-import { Routes } from '@interfaces/routes.interface';
-import { ErrorMiddleware } from '@middlewares/error.middleware';
-import { logger, stream } from '@utils/logger';
 
 export class App {
   public app: express.Application;
   public env: string;
   public port: string | number;
+  public passport: passport.PassportStatic;
 
   constructor(routes: Routes[]) {
     this.app = express();
@@ -29,6 +35,7 @@ export class App {
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
+    this.initializePassport();
   }
 
   public listen() {
@@ -83,5 +90,30 @@ export class App {
 
   private initializeErrorHandling() {
     this.app.use(ErrorMiddleware);
+  }
+
+  private initializePassport() {
+    this.app.use(
+      session({
+        secret: process.env.SECRET_KEY,
+        resave: false,
+        saveUninitialized: false,
+      }),
+    );
+    passport.use(
+      new Strategy(
+        {
+          clientID: process.env.DISCORD_CLIENT_ID,
+          clientSecret: process.env.DISCORD_CLIENT_SECRET,
+          callbackURL: process.env.DISCORD_REDIRECT_URI,
+          scope: ['identify'],
+        },
+        (accessToken, refreshToken, profile, done) => {
+          return done(null, profile);
+        },
+      ),
+    );
+    this.app.use(passport.initialize());
+    this.app.use(passport.session());
   }
 }

@@ -1,12 +1,10 @@
-import { Router } from 'express';
 import { AuthController } from '@controllers/auth.controller';
-import { CreateUserDto } from '@dtos/users.dto';
+import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
-import { AuthMiddleware } from '@middlewares/auth.middleware';
-import { ValidationMiddleware } from '@middlewares/validation.middleware';
+import passport from 'passport';
 
 export class AuthRoute implements Routes {
-  public path = '/';
+  public path = '/api/auth';
   public router = Router();
   public auth = new AuthController();
 
@@ -15,8 +13,12 @@ export class AuthRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}signup`, ValidationMiddleware(CreateUserDto), this.auth.signUp);
-    this.router.post(`${this.path}login`, ValidationMiddleware(CreateUserDto), this.auth.logIn);
-    this.router.post(`${this.path}logout`, AuthMiddleware, this.auth.logOut);
+    this.router.get(`${this.path}/discord/login`, passport.authenticate('discord', { scope: ['identify'] }));
+    this.router.get(
+      `${this.path}/discord/callback`,
+      passport.authenticate('discord', { session: false, failureRedirect: '/error-oauth' }),
+      this.auth.callback,
+    );
+    this.router.get(`${this.path}/logout`, this.auth.logout);
   }
 }

@@ -1,12 +1,13 @@
+import { DB_DATABASE, DB_HOST, DB_PASSWORD, DB_USER, NODE_ENV } from '@config';
 import { connect, set } from 'mongoose';
-import { NODE_ENV, DB_HOST, DB_PORT, DB_DATABASE } from '@config';
 
 export const dbConnection = async () => {
   const dbConfig = {
-    url: `mongodb://${DB_HOST}:${DB_PORT}/${DB_DATABASE}`,
+    url: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_DATABASE}?authSource=admin`,
     options: {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      tls: true,
     },
   };
 
