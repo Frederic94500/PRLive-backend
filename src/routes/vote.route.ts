@@ -5,7 +5,7 @@ import { ValidationMiddleware } from '@/middlewares/validation.middleware';
 import { VoteController } from '@/controllers/vote.controller';
 
 export class VoteRoute implements Routes {
-  public path = '/vote';
+  public path = '/api/vote';
   public router = Router();
   public voteController = new VoteController();
 

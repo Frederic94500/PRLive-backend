@@ -5,7 +5,7 @@ import { SongController } from '@controllers/song.controller';
 import { ValidationMiddleware } from '@/middlewares/validation.middleware';
 
 export class SongRoute implements Routes {
-  public path = '/song';
+  public path = '/api/song';
   public router = Router();
   public song = new SongController();
 
