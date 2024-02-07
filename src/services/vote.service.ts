@@ -1,7 +1,8 @@
+import { AverageVote, Vote } from '@/interfaces/vote.interface';
+
 import { HttpException } from '@/exceptions/httpException';
 import { Service } from 'typedi';
 import { SongModel } from '@/models/song.model';
-import { Vote } from '@/interfaces/vote.interface';
 import { VoteModel } from '@/models/vote.model';
 
 @Service()
@@ -32,9 +33,14 @@ export class VoteService {
       sumScore[vote.songId].count++;
     });
 
-    const averageVotes: Record<string, number> = {};
+    const averageVotes: AverageVote[] = [];
     songs.forEach(song => {
-      averageVotes[song._id] = sumScore[song._id].sum / sumScore[song._id].count;
+      averageVotes.push({
+        artist: song.artist,
+        title: song.title,
+        avergage: sumScore[song._id].sum / sumScore[song._id].count,
+        numberOfVotes: sumScore[song._id].count,
+      });
     });
 
     return JSON.stringify(averageVotes);

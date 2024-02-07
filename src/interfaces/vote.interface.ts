@@ -5,3 +5,10 @@ export interface Vote {
   score: number;
   timestamp: Date;
 }
+
+export interface AverageVote {
+  artist: string;
+  title: string;
+  avergage: number;
+  numberOfVotes: number;
+}
