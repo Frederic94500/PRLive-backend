@@ -9,7 +9,7 @@ export interface Vote {
 export interface AverageVote {
   artist: string;
   title: string;
-  avergage: number;
+  average: number;
   numberOfVotes: number;
   url: string;
 }
