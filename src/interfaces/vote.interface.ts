@@ -11,4 +11,5 @@ export interface AverageVote {
   title: string;
   avergage: number;
   numberOfVotes: number;
+  url: string;
 }

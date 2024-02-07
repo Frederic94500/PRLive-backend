@@ -40,6 +40,7 @@ export class VoteService {
         title: song.title,
         avergage: sumScore[song._id].sum / sumScore[song._id].count,
         numberOfVotes: sumScore[song._id].count,
+        url: song.url,
       });
     });
 
