@@ -1,8 +1,8 @@
-import { hash } from 'bcrypt';
-import { Service } from 'typedi';
 import { HttpException } from '@exceptions/httpException';
-import { User } from '@interfaces/users.interface';
-import { UserModel } from '@models/users.model';
+import { Service } from 'typedi';
+import { User } from '@interfaces/user.interface';
+import { UserModel } from '@/models/user.model';
+import { hash } from 'bcrypt';
 
 @Service()
 export class UserService {

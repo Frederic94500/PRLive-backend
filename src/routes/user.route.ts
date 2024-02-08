@@ -1,7 +1,7 @@
+import { CreateUserDto } from '@dtos/user.dto';
 import { Router } from 'express';
-import { UserController } from '@controllers/users.controller';
-import { CreateUserDto } from '@dtos/users.dto';
 import { Routes } from '@interfaces/routes.interface';
+import { UserController } from '@/controllers/user.controller';
 import { ValidationMiddleware } from '@middlewares/validation.middleware';
 
 export class UserRoute implements Routes {
