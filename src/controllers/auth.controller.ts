@@ -1,17 +1,18 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 import { AuthService } from '@services/auth.service';
 import { Container } from 'typedi';
+import { sendJSON } from './toolbox.controller';
 
 export class AuthController {
   public auth = Container.get(AuthService);
 
-  public callback = async (req: Request, res: Response, next: NextFunction) => {
+  public callback = async (req: Request, res: Response) => {
     try {
       this.auth.callback(req.user);
-      res.redirect('/vote');
+      sendJSON(res, 200, 'Logged in');
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 

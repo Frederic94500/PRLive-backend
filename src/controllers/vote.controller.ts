@@ -1,30 +1,31 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 import Container from 'typedi';
 import { Vote } from '@/interfaces/vote.interface';
 import { VoteService } from '@/services/vote.service';
+import { sendJSON } from './toolbox.controller';
 
 export class VoteController {
   public vote = Container.get(VoteService);
 
-  public castVote = async (req: Request, res: Response, next: NextFunction) => {
+  public castVote = async (req: Request, res: Response) => {
     try {
       const voteData: Vote = req.body;
       await this.vote.castVote(voteData);
 
-      res.status(201).json({ message: 'created' });
+      sendJSON(res, 201, 'created');
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public getAverageVotes = async (req: Request, res: Response, next: NextFunction) => {
+  public getAverageVotes = async (req: Request, res: Response) => {
     try {
       const averageVotes: String = await this.vote.getAverageVotes();
 
-      res.status(200).json({ data: averageVotes });
+      sendJSON(res, 200, averageVotes);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 }

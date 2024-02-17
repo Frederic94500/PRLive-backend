@@ -1,65 +1,66 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
 import { Song } from '@/interfaces/song.interface';
 import { SongService } from '@/services/song.service';
+import { sendJSON } from './toolbox.controller';
 
 export class SongController {
   public song = Container.get(SongService);
 
-  public createSong = async (req: Request, res: Response, next: NextFunction) => {
+  public createSong = async (req: Request, res: Response) => {
     try {
       const songData: Song = req.body;
       await this.song.createSong(songData);
 
-      res.status(201).json({ message: 'created' });
+      sendJSON(res, 201, 'created');
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public getNotVotedSong = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
+  public getNotVotedSong = async (req: Request & { user: { id: string } }, res: Response) => {
     try {
       const discordId: string = req.user.id;
       const songs: Song[] = await this.song.getNotVotedSongByDiscordId(discordId);
 
-      res.status(200).json({ data: songs });
+      sendJSON(res, 200, songs);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public getRandomSong = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
+  public getRandomSong = async (req: Request & { user: { id: string } }, res: Response) => {
     try {
       const discordId: string = req.user.id;
       const song: Song = await this.song.randomSong(discordId);
 
-      res.status(200).json({ data: song });
+      sendJSON(res, 200, song);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public getSongById = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
+  public getSongById = async (req: Request & { user: { id: string } }, res: Response) => {
     try {
       const songId: string = req.params.id;
       const discordId: string = req.user.id;
       const findSongData: Song = await this.song.findSongById(discordId, songId);
 
-      res.status(200).json({ data: findSongData });
+      sendJSON(res, 200, findSongData);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public deleteSong = async (req: Request, res: Response, next: NextFunction) => {
+  public deleteSong = async (req: Request, res: Response) => {
     try {
       const songId: string = req.params.id;
       await this.song.deleteSong(songId);
 
-      res.status(200).json({ message: 'deleted' });
+      sendJSON(res, 200, 'deleted');
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 }

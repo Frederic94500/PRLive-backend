@@ -1,41 +1,42 @@
-import { NextFunction, Request, Response } from 'express';
+import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
 import { User } from '@interfaces/user.interface';
 import { UserService } from '@services/user.service';
+import { sendJSON } from './toolbox.controller';
 
 export class UserController {
   public user = Container.get(UserService);
 
-  public getUsers = async (req: Request, res: Response, next: NextFunction) => {
+  public getUsers = async (req: Request, res: Response) => {
     try {
       const findAllUsersData: User[] = await this.user.findAllUser();
 
-      res.status(200).json({ data: findAllUsersData, message: 'findAll' });
+      sendJSON(res, 200, findAllUsersData);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public getUserById = async (req: Request, res: Response, next: NextFunction) => {
+  public getUserById = async (req: Request, res: Response) => {
     try {
       const userId: string = req.params.id;
       const findOneUserData: User = await this.user.findUserById(userId);
 
-      res.status(200).json({ data: findOneUserData, message: 'findOne' });
+      sendJSON(res, 200, findOneUserData);
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 
-  public deleteUser = async (req: Request, res: Response, next: NextFunction) => {
+  public deleteUser = async (req: Request, res: Response) => {
     try {
       const userId: string = req.params.id;
-      const deleteUserData: User = await this.user.deleteUser(userId);
+      await this.user.deleteUser(userId);
 
-      res.status(200).json({ data: deleteUserData, message: 'deleted' });
+      sendJSON(res, 200, 'deleted');
     } catch (error) {
-      next(error);
+      sendJSON(res, error.status, error.message);
     }
   };
 }

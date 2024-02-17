@@ -1,6 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { UserModel } from '@/models/user.model';
+import { sendJSON } from '@/controllers/toolbox.controller';
 
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
@@ -16,5 +17,5 @@ export const checkAdmin = async (req: Request & { user: { id: string } }, res: R
       return next();
     }
   }
-  res.status(403).json({ message: 'Forbidden' });
+  sendJSON(res, 403, 'Forbidden');
 };
