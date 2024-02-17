@@ -32,10 +32,10 @@ export class App {
 
     this.connectToDatabase();
     this.initializeMiddlewares();
+    this.initializePassport();
     this.initializeRoutes(routes);
     this.initializeSwagger();
     this.initializeErrorHandling();
-    this.initializePassport();
   }
 
   public listen() {
@@ -100,6 +100,12 @@ export class App {
         saveUninitialized: false,
       }),
     );
+    passport.serializeUser(function (user, done) {
+      done(null, user);
+    });
+    passport.deserializeUser(function (user, done) {
+      done(null, user);
+    });
     passport.use(
       new Strategy(
         {
