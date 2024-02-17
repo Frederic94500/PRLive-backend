@@ -12,7 +12,7 @@ export class UserRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}`, this.user.getUsers);
-    this.router.delete(`${this.path}/:id`, this.user.deleteUser);
+    this.router.get(`${this.path}/get`, this.user.getUsers);
+    this.router.delete(`${this.path}/delete/:id`, this.user.deleteUser);
   }
 }

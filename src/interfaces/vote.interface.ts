@@ -13,3 +13,9 @@ export interface AverageVote {
   numberOfVotes: number;
   url: string;
 }
+
+export interface UserVote {
+  username: string;
+  countVote: number;
+  avgVote: number;
+}

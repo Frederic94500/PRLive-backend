@@ -1,8 +1,8 @@
 import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
-import { User } from '@interfaces/user.interface';
 import { UserService } from '@services/user.service';
+import { UserVote } from '@/interfaces/vote.interface';
 import { sendJSON } from './toolbox.controller';
 
 export class UserController {
@@ -10,10 +10,11 @@ export class UserController {
 
   public getUsers = async (req: Request, res: Response) => {
     try {
-      const findAllUsersData: User[] = await this.user.findAllUser();
+      const usersVote: UserVote[] = await this.user.getUsers();
 
-      sendJSON(res, 200, findAllUsersData);
+      sendJSON(res, 200, usersVote);
     } catch (error) {
+      console.log(error);
       sendJSON(res, error.status, error.message);
     }
   };
