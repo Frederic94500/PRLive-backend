@@ -18,17 +18,6 @@ export class UserController {
     }
   };
 
-  public getUserById = async (req: Request, res: Response) => {
-    try {
-      const userId: string = req.params.id;
-      const findOneUserData: User = await this.user.findUserById(userId);
-
-      sendJSON(res, 200, findOneUserData);
-    } catch (error) {
-      sendJSON(res, error.status, error.message);
-    }
-  };
-
   public deleteUser = async (req: Request, res: Response) => {
     try {
       const userId: string = req.params.id;

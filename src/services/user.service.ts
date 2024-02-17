@@ -10,13 +10,6 @@ export class UserService {
     return users;
   }
 
-  public async findUserById(userId: string): Promise<User> {
-    const findUser: User = await UserModel.findOne({ _id: userId });
-    if (!findUser) throw new HttpException(409, "User doesn't exist");
-
-    return findUser;
-  }
-
   public async deleteUser(userId: string): Promise<User> {
     const deleteUserById: User = await UserModel.findByIdAndDelete(userId);
     if (!deleteUserById) throw new HttpException(409, "User doesn't exist");
