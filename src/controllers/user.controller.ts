@@ -28,29 +28,6 @@ export class UserController {
     }
   };
 
-  public createUser = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userData: User = req.body;
-      const createUserData: User = await this.user.createUser(userData);
-
-      res.status(201).json({ data: createUserData, message: 'created' });
-    } catch (error) {
-      next(error);
-    }
-  };
-
-  public updateUser = async (req: Request, res: Response, next: NextFunction) => {
-    try {
-      const userId: string = req.params.id;
-      const userData: User = req.body;
-      const updateUserData: User = await this.user.updateUser(userId, userData);
-
-      res.status(200).json({ data: updateUserData, message: 'updated' });
-    } catch (error) {
-      next(error);
-    }
-  };
-
   public deleteUser = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const userId: string = req.params.id;

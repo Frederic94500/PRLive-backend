@@ -5,6 +5,7 @@ import { User } from '@interfaces/user.interface';
 const UserSchema: Schema = new Schema({
   discordId: { type: String, required: true },
   username: { type: String, required: true },
+  role: { type: String, required: true },
 });
 
 export const UserModel = model<User & Document>('User', UserSchema);

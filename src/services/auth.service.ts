@@ -8,6 +8,7 @@ export class AuthService {
     const user: User = {
       discordId: reqUser.id,
       username: reqUser.username,
+      role: 'user',
     };
 
     const findUser: User = await UserModel.findOne({ discordId: user.discordId });
