@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from 'express';
 
 import { UserModel } from '@/models/user.model';
-import { sendJSON } from '@/controllers/toolbox.controller';
+import { sendJSON } from 'utils/toolbox';
 
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {

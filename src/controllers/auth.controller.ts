@@ -2,7 +2,7 @@ import { Request, Response } from 'express';
 
 import { AuthService } from '@services/auth.service';
 import { Container } from 'typedi';
-import { sendJSON } from './toolbox.controller';
+import { sendJSON } from '../utils/toolbox';
 
 export class AuthController {
   public auth = Container.get(AuthService);

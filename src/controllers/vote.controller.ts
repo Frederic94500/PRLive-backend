@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import Container from 'typedi';
 import { Vote } from '@/interfaces/vote.interface';
 import { VoteService } from '@/services/vote.service';
-import { sendJSON } from './toolbox.controller';
+import { sendJSON } from '../utils/toolbox';
 
 export class VoteController {
   public vote = Container.get(VoteService);

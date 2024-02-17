@@ -3,7 +3,7 @@ import { Request, Response } from 'express';
 import { Container } from 'typedi';
 import { Song } from '@/interfaces/song.interface';
 import { SongService } from '@/services/song.service';
-import { sendJSON } from './toolbox.controller';
+import { sendJSON } from '../utils/toolbox';
 
 export class SongController {
   public song = Container.get(SongService);
