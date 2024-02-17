@@ -18,9 +18,21 @@ export class SongController {
     }
   };
 
-  public getSong = async (req: Request, res: Response, next: NextFunction) => {
+  public getNotVotedSong = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
     try {
-      const song: Song = await this.song.randomSong();
+      const discordId: string = req.user.id;
+      const songs: Song[] = await this.song.getNotVotedSongByDiscordId(discordId);
+
+      res.status(200).json({ data: songs });
+    } catch (error) {
+      next(error);
+    }
+  };
+
+  public getRandomSong = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
+    try {
+      const discordId: string = req.user.id;
+      const song: Song = await this.song.randomSong(discordId);
 
       res.status(200).json({ data: song });
     } catch (error) {
@@ -28,10 +40,11 @@ export class SongController {
     }
   };
 
-  public getSongById = async (req: Request, res: Response, next: NextFunction) => {
+  public getSongById = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
     try {
       const songId: string = req.params.id;
-      const findSongData: Song = await this.song.findSongById(songId);
+      const discordId: string = req.user.id;
+      const findSongData: Song = await this.song.findSongById(discordId, songId);
 
       res.status(200).json({ data: findSongData });
     } catch (error) {

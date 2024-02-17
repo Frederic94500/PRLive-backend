@@ -1,3 +1,5 @@
+import { checkAdmin, checkAuth } from '@/middlewares/auth.middleware';
+
 import { CreateSongDto } from '@/dtos/song.dto';
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
@@ -14,9 +16,10 @@ export class SongRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.post(`${this.path}/create`, ValidationMiddleware(CreateSongDto), this.song.createSong);
-    this.router.get(`${this.path}/get`, this.song.getSong);
-    this.router.get(`${this.path}/get/:id`, this.song.getSongById);
-    this.router.delete(`${this.path}/delete/:id`, this.song.deleteSong);
+    this.router.post(`${this.path}/create`, checkAdmin, ValidationMiddleware(CreateSongDto), this.song.createSong);
+    this.router.get(`${this.path}/getnotvoted`, checkAuth, this.song.getNotVotedSong);
+    this.router.get(`${this.path}/get`, checkAuth, this.song.getRandomSong);
+    this.router.get(`${this.path}/get/:id`, checkAuth, this.song.getSongById);
+    this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.song.deleteSong);
   }
 }

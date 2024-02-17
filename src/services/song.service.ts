@@ -2,6 +2,10 @@ import { HttpException } from '@/exceptions/httpException';
 import { Service } from 'typedi';
 import { Song } from '@/interfaces/song.interface';
 import { SongModel } from '@/models/song.model';
+import { User } from '@/interfaces/user.interface';
+import { UserModel } from '@/models/user.model';
+import { Vote } from '@/interfaces/vote.interface';
+import { VoteModel } from '@/models/vote.model';
 
 @Service()
 export class SongService {
@@ -14,9 +18,21 @@ export class SongService {
     await SongModel.create(songData);
   }
 
-  public async randomSong(): Promise<Song> {
-    const findAllSongData: Song[] = await SongModel.find();
-    const randomSong: Song = findAllSongData[Math.floor(Math.random() * findAllSongData.length)];
+  public async getNotVotedSongByDiscordId(discordId: string): Promise<Song[]> {
+    const user: User = await UserModel.findOne({ discordId });
+    const findAllUserVote: Vote[] = await VoteModel.find({ userId: user._id });
+    const findAllSongNotVoted: Song[] = await SongModel.find({ songId: { $nin: findAllUserVote.map(vote => vote.songId) } });
+
+    if (findAllSongNotVoted.length === 0) {
+      throw new HttpException(404, `All song has been voted by you`);
+    }
+
+    return findAllSongNotVoted;
+  }
+
+  public async randomSong(discordId: string): Promise<Song> {
+    const findAllSongNotVoted: Song[] = await this.getNotVotedSongByDiscordId(discordId);
+    const randomSong: Song = findAllSongNotVoted[Math.floor(Math.random() * findAllSongNotVoted.length)];
     if (!randomSong) {
       throw new HttpException(404, `Song doesn't exist`);
     }
@@ -24,8 +40,9 @@ export class SongService {
     return randomSong;
   }
 
-  public async findSongById(songId: string): Promise<Song> {
-    const findSong: Song = await SongModel.findById(songId);
+  public async findSongById(discordId: string, songId: string): Promise<Song> {
+    const findAllSongNotVoted: Song[] = await this.getNotVotedSongByDiscordId(discordId);
+    const findSong: Song = findAllSongNotVoted.find(song => song._id === songId);
     if (!findSong) {
       throw new HttpException(404, `Song doesn't exist`);
     }
