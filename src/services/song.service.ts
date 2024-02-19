@@ -21,7 +21,8 @@ export class SongService {
   public async getNotVotedSongByDiscordId(discordId: string): Promise<Song[]> {
     const user: User = await UserModel.findOne({ discordId });
     const findAllUserVote: Vote[] = await VoteModel.find({ userId: user._id });
-    const findAllSongNotVoted: Song[] = await SongModel.find({ songId: { $nin: findAllUserVote.map(vote => vote.songId) } });
+    const findAllSongNotVoted: Song[] = await SongModel.find({ _id: { $nin: findAllUserVote.map(vote => vote.songId) } });
+    console.log(findAllSongNotVoted);
 
     if (findAllSongNotVoted.length === 0) {
       throw new HttpException(404, `All song has been voted by you`);
