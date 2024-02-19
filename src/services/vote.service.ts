@@ -3,18 +3,24 @@ import { AverageVote, Vote } from '@/interfaces/vote.interface';
 import { HttpException } from '@/exceptions/httpException';
 import { Service } from 'typedi';
 import { SongModel } from '@/models/song.model';
+import { User } from '@/interfaces/user.interface';
+import { UserModel } from '@/models/user.model';
 import { VoteModel } from '@/models/vote.model';
 
 @Service()
 export class VoteService {
-  public async castVote(voteData: Vote): Promise<void> {
+  public async castVote(voteData: Vote, discordId: string): Promise<void> {
+    const findUser: User = await UserModel.findOne({ discordId });
     const findVote: Vote = await VoteModel.findOne({
       songId: voteData.songId,
-      userId: voteData.userId,
+      userId: findUser._id,
     });
     if (findVote) {
       throw new HttpException(409, `You have already voted for this song`);
     }
+
+    voteData.userId = findUser._id;
+    voteData.timestamp = new Date();
 
     await VoteModel.create(voteData);
   }

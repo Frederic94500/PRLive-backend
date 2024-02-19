@@ -8,10 +8,11 @@ import { sendJSON } from '../utils/toolbox';
 export class VoteController {
   public vote = Container.get(VoteService);
 
-  public castVote = async (req: Request, res: Response) => {
+  public castVote = async (req: Request & { user: { id: string } }, res: Response) => {
     try {
       const voteData: Vote = req.body;
-      await this.vote.castVote(voteData);
+      const discordId: string = req.user.id;
+      await this.vote.castVote(voteData, discordId);
 
       sendJSON(res, 201, 'created');
     } catch (error) {

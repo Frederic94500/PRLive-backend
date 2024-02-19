@@ -5,10 +5,6 @@ export class CreateVoteDto {
   @IsNotEmpty()
   public songId: string;
 
-  @IsString()
-  @IsNotEmpty()
-  public userId: string;
-
   @IsNumber()
   @IsNotEmpty()
   @Min(1)
