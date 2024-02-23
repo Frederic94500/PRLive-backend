@@ -24,7 +24,7 @@ export class SongService {
     const findAllSongNotVoted: Song[] = await SongModel.find({ _id: { $nin: findAllUserVote.map(vote => vote.songId) } });
 
     if (findAllSongNotVoted.length === 0) {
-      throw new HttpException(404, `All song has been voted by you`);
+      return [];
     }
 
     return findAllSongNotVoted;
