@@ -30,26 +30,6 @@ export class SongService {
     return findAllSongNotVoted;
   }
 
-  public async randomSong(discordId: string): Promise<Song> {
-    const findAllSongNotVoted: Song[] = await this.getNotVotedSongByDiscordId(discordId);
-    const randomSong: Song = findAllSongNotVoted[Math.floor(Math.random() * findAllSongNotVoted.length)];
-    if (!randomSong) {
-      throw new HttpException(404, `Song doesn't exist`);
-    }
-
-    return randomSong;
-  }
-
-  public async findSongById(discordId: string, songId: string): Promise<Song> {
-    const findAllSongNotVoted: Song[] = await this.getNotVotedSongByDiscordId(discordId);
-    const findSong: Song = findAllSongNotVoted.find(song => song._id === songId);
-    if (!findSong) {
-      throw new HttpException(404, `Song doesn't exist`);
-    }
-
-    return findSong;
-  }
-
   public async deleteSong(songId: string): Promise<void> {
     const deleteSongById: Song = await SongModel.findByIdAndDelete(songId);
     if (!deleteSongById) {

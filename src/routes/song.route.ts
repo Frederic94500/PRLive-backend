@@ -18,8 +18,6 @@ export class SongRoute implements Routes {
   private initializeRoutes() {
     this.router.post(`${this.path}/create`, checkAdmin, ValidationMiddleware(CreateSongDto), this.song.createSong);
     this.router.get(`${this.path}/getnotvoted`, checkAuth, this.song.getNotVotedSong);
-    this.router.get(`${this.path}/get`, checkAuth, this.song.getRandomSong);
-    this.router.get(`${this.path}/get/:id`, checkAuth, this.song.getSongById);
     this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.song.deleteSong);
   }
 }

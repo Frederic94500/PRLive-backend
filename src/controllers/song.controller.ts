@@ -30,29 +30,6 @@ export class SongController {
     }
   };
 
-  public getRandomSong = async (req: Request & { user: { id: string } }, res: Response) => {
-    try {
-      const discordId: string = req.user.id;
-      const song: Song = await this.song.randomSong(discordId);
-
-      sendJSON(res, 200, song);
-    } catch (error) {
-      sendJSON(res, error.status, error.message);
-    }
-  };
-
-  public getSongById = async (req: Request & { user: { id: string } }, res: Response) => {
-    try {
-      const songId: string = req.params.id;
-      const discordId: string = req.user.id;
-      const findSongData: Song = await this.song.findSongById(discordId, songId);
-
-      sendJSON(res, 200, findSongData);
-    } catch (error) {
-      sendJSON(res, error.status, error.message);
-    }
-  };
-
   public deleteSong = async (req: Request, res: Response) => {
     try {
       const songId: string = req.params.id;
