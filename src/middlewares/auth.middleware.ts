@@ -6,8 +6,17 @@ import { sendJSON } from 'utils/toolbox';
 export const checkAuth = async (req: Request, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     return next();
+  } else {
+    sendJSON(res, 403, 'Forbidden');
   }
-  res.redirect('/api/auth/discord/login');
+};
+
+export const whoAmI = async (req: Request & { user: { username: string } }, res: Response) => {
+  if (req.isAuthenticated() === true) {
+    sendJSON(res, 200, req.user.username);
+  } else {
+    sendJSON(res, 403, 'Forbidden');
+  }
 };
 
 export const checkAdmin = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
