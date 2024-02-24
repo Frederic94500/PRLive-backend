@@ -1,9 +1,9 @@
-import { checkAuth, whoAmI } from '@/middlewares/auth.middleware';
-
 import { AuthController } from '@controllers/auth.controller';
+import { ORIGIN } from '@/config';
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import passport from 'passport';
+import { whoAmI } from '@/middlewares/auth.middleware';
 
 export class AuthRoute implements Routes {
   public path = '/api/auth';
@@ -16,8 +16,8 @@ export class AuthRoute implements Routes {
 
   private initializeRoutes() {
     this.router.get(`${this.path}/discord/login`, passport.authenticate('discord', { scope: ['identify'] }));
-    this.router.get(`${this.path}/discord/callback`, passport.authenticate('discord', { failureRedirect: '/error-oauth' }), this.auth.callback);
+    this.router.get(`${this.path}/discord/callback`, passport.authenticate('discord', { failureRedirect: ORIGIN }), this.auth.callback);
     this.router.get(`${this.path}/whoami`, whoAmI);
-    this.router.get(`${this.path}/logout`, checkAuth, this.auth.logout);
+    this.router.get(`${this.path}/logout`, this.auth.logout);
   }
 }

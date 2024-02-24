@@ -2,6 +2,7 @@ import { Request, Response } from 'express';
 
 import { AuthService } from '@services/auth.service';
 import { Container } from 'typedi';
+import { ORIGIN } from '@/config';
 import { sendJSON } from '../utils/toolbox';
 
 export class AuthController {
@@ -10,7 +11,7 @@ export class AuthController {
   public callback = async (req: Request, res: Response) => {
     try {
       this.auth.callback(req.user);
-      sendJSON(res, 200, 'Logged in');
+      res.redirect(ORIGIN);
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }
@@ -20,7 +21,7 @@ export class AuthController {
     res.clearCookie('connect.sid');
     req.logout(() => {
       req.session.destroy(() => {
-        res.redirect('/api/auth/discord/login');
+        res.redirect(ORIGIN);
       });
     });
   };
