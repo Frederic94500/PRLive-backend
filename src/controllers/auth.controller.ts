@@ -17,6 +17,15 @@ export class AuthController {
     }
   };
 
+  public whoAmI = async (req: Request & { user: { username: string } }, res: Response) => {
+    try {
+      const username = req.user.username;
+      sendJSON(res, 200, username);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  };
+
   public logout = async (req: Request, res: Response) => {
     res.clearCookie('connect.sid');
     req.logout(() => {

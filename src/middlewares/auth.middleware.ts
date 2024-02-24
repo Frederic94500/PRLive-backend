@@ -11,14 +11,6 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
-export const whoAmI = async (req: Request & { user: { username: string } }, res: Response) => {
-  if (req.isAuthenticated() === true) {
-    sendJSON(res, 200, req.user.username);
-  } else {
-    sendJSON(res, 403, 'Forbidden');
-  }
-};
-
 export const checkAdmin = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     const user = await UserModel.findOne({ discordId: req.user.id });
