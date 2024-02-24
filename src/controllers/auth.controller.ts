@@ -17,7 +17,11 @@ export class AuthController {
   };
 
   public logout = async (req: Request, res: Response) => {
-    req.logout;
-    res.redirect('/api/auth/discord/login');
+    res.clearCookie('connect.sid');
+    req.logout(() => {
+      req.session.destroy(() => {
+        res.redirect('/api/auth/discord/login');
+      });
+    });
   };
 }
