@@ -16,6 +16,10 @@ const SongSchema: Schema = new Schema({
     required: true,
     unique: true,
   },
+  voteCount: {
+    type: Number,
+    default: 0,
+  },
 });
 
 export const SongModel = model<Song & Document>('Song', SongSchema);
