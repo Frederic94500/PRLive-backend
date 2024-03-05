@@ -45,7 +45,7 @@ export class VoteService {
         artist: song.artist,
         title: song.title,
         average: sumScore[song._id].sum / sumScore[song._id].count,
-        numberOfVotes: sumScore[song._id].count,
+        nbVotes: sumScore[song._id].count,
         url: song.url,
       });
     });
