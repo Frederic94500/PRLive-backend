@@ -13,7 +13,7 @@ export class UserRoute implements Routes {
   }
 
   private initializeRoutes() {
-    this.router.get(`${this.path}/getall`, this.user.getUsers);
+    this.router.get(`${this.path}/getusers`, this.user.getUsers);
     this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.user.deleteUser);
   }
 }
