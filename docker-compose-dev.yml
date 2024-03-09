@@ -5,7 +5,7 @@ services:
     container_name: backend
     build:
       context: ./
-      dockerfile: Dockerfile.prod
+      dockerfile: Dockerfile.dev
     ports:
       - "3000:3000"
     volumes:
