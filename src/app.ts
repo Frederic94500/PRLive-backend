@@ -32,6 +32,7 @@ export class App {
 
     this.connectToDatabase();
     this.initializeMiddlewares();
+    this.initialiseSession();
     this.initializePassport();
     this.initializeRoutes(routes);
     this.initializeSwagger();
@@ -64,6 +65,9 @@ export class App {
     this.app.use(express.json());
     this.app.use(express.urlencoded({ extended: true }));
     this.app.use(cookieParser());
+    if (this.env === 'production') {
+      this.app.set('trust proxy', 1);
+    }
   }
 
   private initializeRoutes(routes: Routes[]) {
@@ -92,14 +96,21 @@ export class App {
     this.app.use(ErrorMiddleware);
   }
 
-  private initializePassport() {
+  private initialiseSession() {
     this.app.use(
       session({
         secret: process.env.SECRET_KEY,
         resave: false,
         saveUninitialized: false,
+        cookie: {
+          secure: this.env === 'production' ? true : false,
+          maxAge: 60 * 60 * 1000,
+        },
       }),
     );
+  }
+
+  private initializePassport() {
     passport.serializeUser(function (user, done) {
       done(null, user);
     });
