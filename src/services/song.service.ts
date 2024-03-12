@@ -27,24 +27,6 @@ export class SongService {
       return [];
     }
 
-    const voteCountsMap = await VoteModel.aggregate([
-      {
-        $group: {
-          _id: '$songId',
-          count: { $sum: 1 },
-        },
-      },
-    ]).then(voteCounts =>
-      voteCounts.reduce((acc, vote) => {
-        acc[vote._id] = vote.count;
-        return acc;
-      }, {}),
-    );
-
-    findAllSongNotVoted.forEach(song => {
-      song.voteCount = voteCountsMap[song._id] || 0;
-    });
-
     return findAllSongNotVoted;
   }
 
