@@ -7,7 +7,7 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
   if (req.isAuthenticated()) {
     return next();
   } else {
-    sendJSON(res, 403, 'Forbidden');
+    sendJSON(res, 403, undefined);
   }
 };
 
@@ -18,5 +18,5 @@ export const checkAdmin = async (req: Request & { user: { id: string } }, res: R
       return next();
     }
   }
-  sendJSON(res, 403, 'Forbidden');
+  sendJSON(res, 403, undefined);
 };
