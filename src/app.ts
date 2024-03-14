@@ -32,7 +32,8 @@ export class App {
 
     this.connectToDatabase();
     this.initializeMiddlewares();
-    this.initialiseSession();
+    this.initializeHeaders();
+    this.initializeSession();
     this.initializePassport();
     this.initializeRoutes(routes);
     this.initializeSwagger();
@@ -96,7 +97,16 @@ export class App {
     this.app.use(ErrorMiddleware);
   }
 
-  private initialiseSession() {
+  private initializeHeaders() {
+    this.app.use((req, res, next) => {
+      res.header('Access-Control-Allow-Origin', ORIGIN);
+      res.header('Access-Control-Allow-Credentials', CREDENTIALS.toString());
+      res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+      next();
+    });
+  }
+
+  private initializeSession() {
     this.app.use(
       session({
         secret: process.env.SECRET_KEY,
