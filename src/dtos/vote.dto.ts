@@ -1,4 +1,4 @@
-import { IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
+import { IsInt, IsNotEmpty, IsNumber, IsString, Max, Min } from 'class-validator';
 
 export class CreateVoteDto {
   @IsString()
@@ -9,5 +9,6 @@ export class CreateVoteDto {
   @IsNotEmpty()
   @Min(1)
   @Max(10)
+  @IsInt()
   public score: number;
 }

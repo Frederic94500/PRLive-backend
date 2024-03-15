@@ -2,6 +2,7 @@ import { AverageVote, Vote } from '@/interfaces/vote.interface';
 
 import { HttpException } from '@/exceptions/httpException';
 import { Service } from 'typedi';
+import { Song } from '@/interfaces/song.interface';
 import { SongModel } from '@/models/song.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
@@ -11,8 +12,12 @@ import { VoteModel } from '@/models/vote.model';
 export class VoteService {
   public async castVote(voteData: Vote, discordId: string): Promise<void> {
     const findUser: User = await UserModel.findOne({ discordId });
+    const findSong: Song = await SongModel.findOne({ _id: voteData.songId });
+    if (!findSong) {
+      throw new HttpException(404, `Song not found`);
+    }
     const findVote: Vote = await VoteModel.findOne({
-      songId: voteData.songId,
+      songId: findSong._id,
       userId: findUser._id,
     });
     if (findVote) {
