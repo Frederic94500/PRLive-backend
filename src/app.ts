@@ -81,9 +81,23 @@ export class App {
     const options = {
       swaggerDefinition: {
         info: {
-          title: 'REST API',
+          title: 'PRLiveTFT-backend',
           version: '1.0.0',
-          description: 'Example docs',
+          description: 'PRLiveTFT-backend API',
+        },
+        components: {
+          securityDefinitions: {
+            discordOauth2: {
+              type: 'oauth2',
+              description: 'This API uses OAuth 2.0 with the Discord API',
+              flows: {
+                authorizationCode: {
+                  authorizationUrl: 'https://discord.com/api/oauth2/authorize',
+                  scopes: { identify: "Grants read access to a user's profile data" },
+                },
+              },
+            },
+          },
         },
       },
       apis: ['swagger.yaml'],

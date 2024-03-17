@@ -1,120 +1,346 @@
+openapi: 3.0.3
+info:
+  title: PRLiveTFT-backend
+  description: PRLiveTFT-backend API
+  version: 1.0.0
+
+servers:
+  - url: https://prlivetft-api.frederic94500.net/
+    description: API Server
+
+# components:
+#   securityDefinitions:
+#     discordOauth2:
+#       type: oauth2
+#       description: This API uses OAuth 2.0 with the Discord API
+#       flows:
+#         authorizationCode:
+#           authorizationUrl: https://discord.com/api/oauth2/authorize
+#           scopes:
+#             identify: "Grants read access to a user's profile data"
+
 tags:
-- name: users
-  description: users API
+- name: auth
+  description: auth API
+- name: song
+  description: song API
+- name: user
+  description: user API
+- name: vote
+  description: vote API
 
 paths:
-# [GET] users
-  /users:
+# [GET] /api/auth/discord/login
+  /api/auth/discord/login:
     get:
       tags:
-      - users
-      summary: Find All Users
+      - auth
+      summary: Discord Login
       responses:
         200:
           description: 'OK'
         500:
           description: 'Server Error'
 
-# [POST] users
-    post:
+# [GET] /api/auth/discord/callback/:code
+  /api/auth/discord/callback/:code:
+    get:
       tags:
-      - users
-      summary: Add User
+      - auth
+      summary: Discord Callback
       parameters:
-      - name: body
-        in: body
-        description: user Data
+      - name: code
+        in: path
+        description: Discord Code
         required: true
         schema:
-          $ref: '#/definitions/users'
+          type: string
+      responses:
+        200:
+          description: 'OK'
+        500:
+          description: 'Server Error'
+
+# [GET] /api/auth/whoami
+  /api/auth/whoami:
+    get:
+      tags:
+      - auth
+      summary: Who Am I - Use express-session cookie connect.sid
+      security:
+      - discordOauth2: [identify]
+      responses:
+        200:
+          description: 'OK'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Server Error'
+  
+# [GET] /api/auth/logout
+  /api/auth/logout:
+    get:
+      tags:
+      - auth
+      summary: Logout
+      responses:
+        200:
+          description: 'OK'
+        500:
+          description: 'Server Error'
+
+# [POST] /api/song/create
+  /api/song/create:
+    post:
+      tags:
+      - song
+      summary: Add Song
+      requestBody:
+        name: body
+        in: body
+        description: song Data
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/definitions/Song'
+      security:
+      - discordOauth2: [identify]
       responses:
         201:
           description: 'Created'
         400:
           description: 'Bad Request'
+        401:
+          description: 'Unauthorized'
+        403:
+          description: 'Forbidden'
         409:
-          description: 'Conflict'
+          description: 'This song (title) already exists'
         500:
           description: 'Server Error'
 
-# [GET] users/id
-  /users/{id}:
+# [GET] /api/song/getnotvoted
+  /api/song/getnotvoted:
     get:
       tags:
-      - users
-      summary: Find User By Id
-      parameters:
-      - name: id
-        in: path
-        description: User Id
-        required: true
+      - song
+      summary: Get Not Voted Songs
+      security:
+      - discordOauth2: [identify]
       responses:
         200:
           description: 'OK'
-        409:
-          description: 'Conflict'
+        401:
+          description: 'Unauthorized'
         500:
           description: 'Server Error'
 
-# [PUT] users/id
-    put:
-      tags:
-      - users
-      summary: Update User By Id
-      parameters:
-      - name: id
-        in: path
-        description: user Id
-        required: true
-      - name: body
-        in: body
-        description: user Data
-        required: true
-        schema:
-          $ref: '#/definitions/users'
-      responses:
-        200:
-          description: 'OK'
-        400:
-          description: 'Bad Request'
-        409:
-          description: 'Conflict'
-        500:
-          description: 'Server Error'
-
-# [DELETE] users/id
+# [DELETE] /api/song/delete/:id
+  /api/song/delete/{id}:
     delete:
       tags:
-      - users
-      summary: Delete User By Id
+      - song
+      summary: Delete Song By MongoDB ID
       parameters:
       - name: id
         in: path
-        description: user Id
+        description: Song MongoDB ID
         required: true
+      security:
+      - discordOauth2: [identify]
       responses:
         200:
           description: 'OK'
-        409:
-          description: 'Conflict'
+        401:
+          description: 'Unauthorized'
+        403:
+          description: 'Forbidden'
+        404:
+          description: "Song doesn't exist"
+        500:
+          description: 'Server Error'
+
+# [GET] /api/user/getvoted
+  /api/user/getusers:
+    get:
+      tags:
+      - user
+      summary: Get Users
+      responses:
+        200:
+          description: 'OK'
+        401:
+          description: 'Unauthorized'
+        500:
+          description: 'Server Error'
+
+# [DELETE] /api/user/delete/:id
+  /api/user/delete/{id}:
+    delete:
+      tags:
+      - user
+      summary: Delete User By MongoDB ID
+      parameters:
+      - name: id
+        in: path
+        description: User MongoDB ID
+        required: true
+      security:
+      - discordOauth2: [identify]
+      responses:
+        200:
+          description: 'OK'
+        401:
+          description: 'Unauthorized'
+        403:
+          description: 'Forbidden'
+        404:
+          description: "User doesn't exist"
+        500:
+          description: 'Server Error'
+
+# [POST] /api/vote/cast
+  /api/vote/cast:
+    post:
+      tags:
+      - vote
+      summary: Cast Vote
+      parameters:
+      - name: body
+        in: body
+        description: vote Data
+        required: true
+        schema:
+          $ref: '#/definitions/Vote'
+      security:
+      - discordOauth2: [identify]
+      responses:
+        201:
+          description: 'Created'
+        401:
+          description: 'Unauthorized'
+        400:
+          description: 'Bad Request'
+        500:
+          description: 'Server Error'
+
+# [GET] /api/vote/avg
+  /api/vote/avg:
+    get:
+      tags:
+      - vote
+      summary: Get Average Vote
+      responses:
+        200:
+          description: 'OK'
         500:
           description: 'Server Error'
 
 # definitions
 definitions:
-  users:
+  Song:
     type: object
     required:
-        - email
-        - password
+        - title
+        - artist
+        - url
     properties:
-      email:
+      _id:
         type: string
-        description: user Email
-      password:
+        description: Song MongoDB ID
+      title:
         type: string
-        description: user Password
+        description: Song Title
+      artist:
+        type: string
+        description: Song Artist
+      url:
+        type: string
+        description: Song URL
+  User:
+    type: object
+    required:
+        - discordId
+        - username
+        - role
+    properties:
+      _id:
+        type: string
+        description: User MongoDB ID
+      discordId:
+        type: string
+        description: User Discord ID
+      username:
+        type: string
+        description: User Username
+      role:
+        type: string
+        description: User Role
+  Vote:
+    type: object
+    required:
+        - songId
+        - userId
+        - score
+        - timestamp
+    properties:
+      _id:
+        type: string
+        description: Vote MongoDB ID
+      songId:
+        type: string
+        description: Song MongoDB ID
+      userId:
+        type: string
+        description: User MongoDB ID
+      score:
+        type: integer
+        description: Vote Score
+      timestamp:
+        type: Date
+        description: Vote Timestamp
+  AverageVote:
+    type: object
+    required:
+        - artist
+        - title
+        - average
+        - nbVotes
+        - url
+    properties:
+      artist:
+        type: string
+        description: Song Artist
+      title:
+        type: string
+        description: Song Title
+      average:
+        type: number
+        description: Song Average Vote
+      nbVotes:
+        type: integer
+        description: Song Number of Votes
+      url:
+        type: string
+        description: Song URL
+  UserVote:
+    type: object
+    required:
+        - username
+        - countVote
+        - avgVote
+    properties:
+      username:
+        type: string
+        description: User Username
+      countVote:
+        type: integer
+        description: User Number of Votes
+      avgVote:
+        type: number
+        description: User Average Vote
+
 
 schemes:
  - https
- - http
