@@ -36,7 +36,7 @@ export class UserService {
 
   public async deleteUser(userId: string): Promise<User> {
     const deleteUserById: User = await UserModel.findByIdAndDelete(userId);
-    if (!deleteUserById) throw new HttpException(409, "User doesn't exist");
+    if (!deleteUserById) throw new HttpException(404, "User doesn't exist");
 
     return deleteUserById;
   }

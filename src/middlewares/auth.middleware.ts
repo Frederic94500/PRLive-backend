@@ -7,7 +7,7 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
   if (req.isAuthenticated()) {
     return next();
   } else {
-    sendJSON(res, 403, undefined);
+    sendJSON(res, 401, undefined);
   }
 };
 
