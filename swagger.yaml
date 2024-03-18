@@ -56,8 +56,8 @@ paths:
         schema:
           type: string
       responses:
-        200:
-          description: 'OK'
+        302:
+          description: 'Found - Redirect to origin'
         500:
           description: 'Server Error'
 
@@ -71,9 +71,35 @@ paths:
       - discordOauth2: [identify]
       responses:
         200:
-          description: 'OK'
+          description: 'OK - Give User Data'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  id:
+                    type: string
+                    description: User Discord ID
+                    example: '1234567890'
+                  username:
+                    type: string
+                    description: User Username
+                    example: 'username'
+                  avatar:
+                    type: string
+                    description: User Avatar ID
+                    example: '1234567890'
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         500:
           description: 'Server Error'
   
@@ -84,8 +110,8 @@ paths:
       - auth
       summary: Logout
       responses:
-        200:
-          description: 'OK'
+        302:
+          description: 'Found - Redirect to origin'
         500:
           description: 'Server Error'
 
@@ -109,14 +135,66 @@ paths:
       responses:
         201:
           description: 'Created'
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 201
+                  data:
+                    type: string
+                    description: Created
+                    exemple: 'created'
         400:
           description: 'Bad Request'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 400
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         403:
           description: 'Forbidden'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 403
         409:
           description: 'This song (title) already exists'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 409
+                  data:
+                    type: string
+                    description: Error Message
+                    example: 'This song (title) already exists'
         500:
           description: 'Server Error'
 
@@ -131,8 +209,30 @@ paths:
       responses:
         200:
           description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/definitions/Song'
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         500:
           description: 'Server Error'
 
@@ -152,16 +252,60 @@ paths:
       responses:
         200:
           description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 200
+                  data:
+                    type: string
+                    description: Deleted
+                    exemple: 'deleted'
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         403:
           description: 'Forbidden'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 403
         404:
           description: "Song doesn't exist"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 403
+                  data:
+                    type: string
+                    description: Error Message
+                    example: "Song doesn't exist"
         500:
           description: 'Server Error'
 
-# [GET] /api/user/getvoted
+# [GET] /api/user/getusers
   /api/user/getusers:
     get:
       tags:
@@ -170,8 +314,30 @@ paths:
       responses:
         200:
           description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/definitions/User'
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         500:
           description: 'Server Error'
 
@@ -191,12 +357,56 @@ paths:
       responses:
         200:
           description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 200
+                  data:
+                    type: string
+                    description: Deleted
+                    exemple: 'deleted'
         401:
           description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
         403:
           description: 'Forbidden'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 403
         404:
           description: "User doesn't exist"
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 403
+                  data:
+                    type: string
+                    description: Error Message
+                    example: "User doesn't exist"
         500:
           description: 'Server Error'
 
@@ -218,10 +428,55 @@ paths:
       responses:
         201:
           description: 'Created'
-        401:
-          description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 201
+                  data:
+                    type: string
+                    description: Created
+                    exemple: 'created'
         400:
           description: 'Bad Request'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 400
+        401:
+          description: 'Unauthorized'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 401
+        409:
+          description: 'You already voted for this song'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Error Code
+                    example: 409
+                  data:
+                    type: string
+                    description: Error Message
+                    example: 'You already voted for this song'
         500:
           description: 'Server Error'
 
@@ -234,6 +489,19 @@ paths:
       responses:
         200:
           description: 'OK'
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  code:
+                    type: number
+                    description: Code
+                    example: 200
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/definitions/AverageVote'
         500:
           description: 'Server Error'
 
