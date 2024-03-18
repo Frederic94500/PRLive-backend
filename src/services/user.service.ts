@@ -34,10 +34,10 @@ export class UserService {
     return usersVote;
   }
 
-  public async deleteUser(userId: string): Promise<User> {
+  public async deleteUser(userId: string): Promise<void> {
     const deleteUserById: User = await UserModel.findByIdAndDelete(userId);
     if (!deleteUserById) throw new HttpException(404, "User doesn't exist");
 
-    return deleteUserById;
+    await VoteModel.deleteMany({ userId });
   }
 }
