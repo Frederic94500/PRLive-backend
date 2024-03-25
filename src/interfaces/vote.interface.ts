@@ -14,8 +14,15 @@ export interface AverageVote {
   url: string;
 }
 
+export interface UVote {
+  artist: string;
+  title: string;
+  score: number;
+}
+
 export interface UserVote {
   username: string;
   countVote: number;
   avgVote: number;
+  votes: UVote[];
 }
