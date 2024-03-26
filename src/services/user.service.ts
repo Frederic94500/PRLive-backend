@@ -24,8 +24,8 @@ export class UserService {
       sumVotes[vote.userId].countVote++;
       sumVotes[vote.userId].avgVote += vote.score;
       sumVotes[vote.userId].votes.push({
-        artist: songs.find(song => song._id === vote.songId).artist,
-        title: songs.find(song => song._id === vote.songId).title,
+        artist: songs.find(song => song._id.toString() === vote.songId).artist,
+        title: songs.find(song => song._id.toString() === vote.songId).title,
         score: vote.score,
       });
     });
