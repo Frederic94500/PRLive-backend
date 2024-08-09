@@ -1,0 +1,13 @@
+{
+    "id": "<string>",
+    "prId": "<string>",
+    "voterId": "<string>",
+    "sheet": [
+        {
+            "uuid": "<string>",
+            "orderId": 1,
+            "rank": 1,
+            "score": 10
+        }
+    ]
+}

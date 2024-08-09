@@ -1,0 +1,24 @@
+{
+    "id": "<string>",
+    "prId": "<string>",
+    "voterId": "<string>",
+    "name": "<string>",
+    "deadline": "<string>",
+    "songCount": 1000,
+    "sheet": [
+        {
+            "uuid": "<string>",
+            "artist": "<string>",
+            "title": "<string>",
+            "anime": "<string>",
+            "type": "<string>",
+            "startSample": 10,
+            "sampleLength": 10,
+            "urlVideo": "<string>",
+            "urlSong": "<string>",
+            "orderId": 1,
+            "rank": 1,
+            "score": 10
+        }
+    ]
+}

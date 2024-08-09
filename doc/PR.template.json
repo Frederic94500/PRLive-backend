@@ -1,0 +1,23 @@
+{
+    "id": "<string>",
+    "name": "<string>",
+    "blind": false,
+    "nomination": false,
+    "deadline": 12158647651,
+    "songCount": 1000,
+    "songList": [
+        {
+            "uuid": "<string>",
+            "orderId": 1,
+            "nominatedId": "[string]",
+            "artist": "<string>",
+            "title": "<string>",
+            "anime": "<string>",
+            "type": "<string>",
+            "startSample": 10,
+            "sampleLength": 10,
+            "urlVideo": "<string>",
+            "urlSong": "<string>"
+        }
+    ]
+}

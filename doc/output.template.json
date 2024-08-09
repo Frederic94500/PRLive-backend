@@ -1,0 +1,26 @@
+{
+    "name": "<string>",
+    "blind": false,
+    "nomination": false,
+    "songs": [
+        {
+            "orderId": 1,
+            "artist": "<string>",
+            "title": "<string>",
+            "anime": "<string>",
+            "type": "<string>",
+            "nominatedBy": "[string]",
+            "rank": 1,
+            "startSample": 10,
+            "sampleLength": 10,
+            "urlVideo": "<string>",
+            "urlSong": "<string>",
+            "voters": [
+                {
+                    "name": "<string>",
+                    "rank": 10
+                }
+            ]
+        }
+    ]
+}
