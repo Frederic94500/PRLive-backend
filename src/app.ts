@@ -81,9 +81,9 @@ export class App {
     const options = {
       swaggerDefinition: {
         info: {
-          title: 'PRLiveTFT-backend',
+          title: 'PRLive-backend',
           version: '1.0.0',
-          description: 'PRLiveTFT-backend API',
+          description: 'PRLive-backend API',
         },
         components: {
           securityDefinitions: {
