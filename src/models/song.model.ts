@@ -3,6 +3,19 @@ import { Document, Schema, model } from 'mongoose';
 import { Song } from '@/interfaces/song.interface';
 
 const SongSchema: Schema = new Schema({
+  uuid: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  orderId: {
+    type: Number,
+    required: true,
+  },
+  nominatedId: {
+    type: String,
+    required: false,
+  },
   artist: {
     type: String,
     required: true,
@@ -11,7 +24,28 @@ const SongSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  url: {
+  anime: {
+    type: String,
+    required: false,
+  },
+  type: {
+    type: String,
+    required: true,
+  },
+  startSample: {
+    type: Number,
+    required: true,
+  },
+  sampleLength: {
+    type: Number,
+    required: true,
+  },
+  urlVideo: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  urlAudio: {
     type: String,
     required: true,
     unique: true,

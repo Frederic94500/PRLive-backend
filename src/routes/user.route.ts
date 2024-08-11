@@ -1,7 +1,8 @@
+import { checkAdmin, checkAuth } from '@/middlewares/auth.middleware';
+
 import { Router } from 'express';
 import { Routes } from '@interfaces/routes.interface';
 import { UserController } from '@/controllers/user.controller';
-import { checkAdmin } from '@/middlewares/auth.middleware';
 
 export class UserRoute implements Routes {
   public path = '/api/user';
@@ -13,6 +14,7 @@ export class UserRoute implements Routes {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}/user`, checkAuth, this.user.getUser);
     this.router.get(`${this.path}/getusers`, this.user.getUsers);
     this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.user.deleteUser);
   }

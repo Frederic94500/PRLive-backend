@@ -20,3 +20,13 @@ export const checkAdmin = async (req: Request & { user: { id: string } }, res: R
   }
   sendJSON(res, 403, undefined);
 };
+
+export const checkCreator = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    const user = await UserModel.findOne({ discordId: req.user.id });
+    if (user.role === 'creator') {
+      return next();
+    }
+  }
+  sendJSON(res, 403, undefined);
+};
