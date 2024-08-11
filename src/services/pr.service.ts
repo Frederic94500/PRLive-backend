@@ -49,11 +49,15 @@ export class PRService {
           sampleLength: song.sampleLength,
           urlVideo: song.urlVideo,
           urlAudio: song.urlAudio,
-          voters: sheets.forEach(sheet => {
-            
-          });,
-        };
-      }),
+          voters: sheets.map(sheet => {
+            const voter = users.find(user => user._id === sheet.voterId);
+            const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
+            return {
+              name: voter.name,
+              rank: sheetSong.rank,
+            };
+        })
+      }})
     };
 
     return prOutput;

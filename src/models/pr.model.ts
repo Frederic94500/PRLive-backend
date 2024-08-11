@@ -1,7 +1,6 @@
 import { Document, Schema, model } from 'mongoose';
 
 import { PR } from '@/interfaces/pr.interface';
-import { SongModel } from './song.model';
 
 const PRSchema = new Schema({
   name: {
