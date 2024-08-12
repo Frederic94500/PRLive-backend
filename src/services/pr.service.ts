@@ -7,10 +7,20 @@ import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
+import { hashKey } from '@/utils/toolbox';
+import { v4 as uuidv4 } from 'uuid';
 
 @Service()
 export class PRService {
-  public async createPR(prData: PR): Promise<void> {
+  public async createPR(prData: PR, creatorId: string): Promise<void> {
+    prData.songList = prData.songList.map((song, index) => {
+      song.uuid = uuidv4();
+      song.orderId = index;
+      return song;
+    });
+    prData.finished = false;
+    prData.creator = creatorId;
+    prData.hashKey = hashKey(prData);
     await PRModel.create(prData);
   }
 
@@ -61,5 +71,10 @@ export class PRService {
     };
 
     return prOutput;
+  }
+
+  public async getPRs(): Promise<PR[]> {
+    const prs: PR[] = await PRModel.find();
+    return prs;
   }
 }

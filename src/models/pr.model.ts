@@ -1,6 +1,7 @@
 import { Document, Schema, model } from 'mongoose';
 
 import { PR } from '@/interfaces/pr.interface';
+import { hashKey } from '@/utils/toolbox';
 
 const PRSchema = new Schema({
   name: {
@@ -21,6 +22,14 @@ const PRSchema = new Schema({
   },
   deadline: {
     type: Number,
+    required: true,
+  },
+  finished: {
+    type: Boolean,
+    required: true,
+  },
+  hashKey: {
+    type: String,
     required: true,
   },
   songList: {

@@ -7,6 +7,8 @@ export interface PR {
     nomination: boolean;
     blind: boolean;
     deadline: number;
+    finished: boolean;
+    hashKey: string;
     songList: Song[];
 }
 
