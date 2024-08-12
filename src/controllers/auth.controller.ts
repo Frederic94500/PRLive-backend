@@ -8,7 +8,7 @@ import { sendJSON } from '../utils/toolbox';
 export class AuthController {
   public auth = Container.get(AuthService);
 
-  public callback = async (req: Request & { user: { id: string; username: string } }, res: Response) => {
+  public callback = async (req: Request & { user: { id: string; username: string, avatar: string } }, res: Response) => {
     try {
       this.auth.callback(req.user);
       res.redirect(ORIGIN);

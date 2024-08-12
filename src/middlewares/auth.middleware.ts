@@ -24,7 +24,7 @@ export const checkAdmin = async (req: Request & { user: { id: string } }, res: R
 export const checkCreator = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     const user = await UserModel.findOne({ discordId: req.user.id });
-    if (user.role === 'creator') {
+    if (user.role === 'creator' || user.role === 'admin') {
       return next();
     }
   }
