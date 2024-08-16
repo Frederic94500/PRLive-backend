@@ -29,7 +29,7 @@ export class PRService {
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
     }
-
+    
     const sheets: Sheet[] = await SheetModel.find({ prId });
     if (sheets.length === 0) {
       throw new HttpException(404, `No sheets found for PR ${pr.name}`);
@@ -60,7 +60,7 @@ export class PRService {
           urlVideo: song.urlVideo,
           urlAudio: song.urlAudio,
           voters: sheets.map(sheet => {
-            const voter = users.find(user => user._id === sheet.voterId);
+            const voter = users.find(user => user.discordId === sheet.voterId);
             const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
             return {
               name: voter.name,
