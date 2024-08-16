@@ -6,3 +6,10 @@ export interface User {
   image: string;
   role: string;
 }
+
+export interface UserOutput {
+  discordId: string;
+  username: string;
+  name: string;
+  image: string;
+}

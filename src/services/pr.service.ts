@@ -29,7 +29,7 @@ export class PRService {
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
     }
-    
+
     const sheets: Sheet[] = await SheetModel.find({ prId });
     if (sheets.length === 0) {
       throw new HttpException(404, `No sheets found for PR ${pr.name}`);
@@ -66,8 +66,18 @@ export class PRService {
               name: voter.name,
               rank: sheetSong.rank,
             };
-        })
-      }})
+          }),
+        };
+      }),
+      voters: sheets.map(sheet => {
+        const voter = users.find(user => user.discordId === sheet.voterId);
+        return {
+          discordId: voter.discordId,
+          username: voter.username,
+          name: voter.name,
+          image: voter.image,
+        };
+      }),
     };
 
     return prOutput;

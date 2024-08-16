@@ -1,5 +1,7 @@
 import { Song, SongOutput } from "./song.interface";
 
+import { UserOutput } from "./user.interface";
+
 export interface PR {
     _id?: string;
     name: string;
@@ -19,4 +21,5 @@ export interface PROutput {
     blind: boolean;
     deadline: number;
     songList: SongOutput[];
+    voters: UserOutput[];
 }
