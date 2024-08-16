@@ -27,5 +27,5 @@ export interface SongOutput {
   voters: {
     name: string;
     rank: number;
-  };
+  }[];
 }
