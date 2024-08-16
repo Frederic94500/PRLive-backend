@@ -48,6 +48,8 @@ export class PRService {
       blind: pr.blind,
       deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
+      numberVoters: sheets.length,
+      numberSongs: pr.songList.length,
       songList: pr.songList.map(song => {
         return {
           uuid: song.uuid,
@@ -61,6 +63,10 @@ export class PRService {
           sampleLength: song.sampleLength,
           urlVideo: song.urlVideo,
           urlAudio: song.urlAudio,
+          totalRank: sheets.reduce((acc, sheet) => {
+            const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
+            return acc + sheetSong.rank;
+          }, 0),
           voters: sheets.map(sheet => {
             const voter = users.find(user => user.discordId === sheet.voterId);
             const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
@@ -70,7 +76,7 @@ export class PRService {
             };
           }),
         };
-      }),
+      }).sort((a, b) => a.orderId - b.orderId),
       voters: sheets.map(sheet => {
         const voter = users.find(user => user.discordId === sheet.voterId);
         return {

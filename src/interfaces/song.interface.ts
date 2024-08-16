@@ -24,6 +24,7 @@ export interface SongOutput {
   sampleLength: number;
   urlVideo: string;
   urlAudio: string;
+  totalRank: number;
   voters: {
     name: string;
     rank: number;

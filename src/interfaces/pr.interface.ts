@@ -22,6 +22,8 @@ export interface PROutput {
     blind: boolean;
     deadlineNomination: number;
     deadline: number;
+    numberVoters: number;
+    numberSongs: number;
     songList: SongOutput[];
     voters: UserOutput[];
 }
