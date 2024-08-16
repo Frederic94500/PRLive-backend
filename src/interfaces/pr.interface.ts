@@ -8,6 +8,7 @@ export interface PR {
     creator: string;
     nomination: boolean;
     blind: boolean;
+    deadlineNomination: number;
     deadline: number;
     finished: boolean;
     hashKey: string;
@@ -19,6 +20,7 @@ export interface PROutput {
     creator: string;
     nomination: boolean;
     blind: boolean;
+    deadlineNomination: number;
     deadline: number;
     songList: SongOutput[];
     voters: UserOutput[];

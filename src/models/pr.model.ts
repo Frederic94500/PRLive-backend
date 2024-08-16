@@ -20,6 +20,10 @@ const PRSchema = new Schema({
     type: Boolean,
     required: true,
   },
+  deadlineNomination: {
+    type: Number,
+    required: false,
+  },
   deadline: {
     type: Number,
     required: true,

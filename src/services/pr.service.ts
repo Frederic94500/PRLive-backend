@@ -18,6 +18,7 @@ export class PRService {
       song.orderId = index;
       return song;
     });
+    prData.deadlineNomination = prData.deadlineNomination || 0;
     prData.finished = false;
     prData.creator = creatorId;
     prData.hashKey = hashKey(prData);
@@ -45,6 +46,7 @@ export class PRService {
       creator: pr.creator,
       nomination: pr.nomination,
       blind: pr.blind,
+      deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
       songList: pr.songList.map(song => {
         return {
