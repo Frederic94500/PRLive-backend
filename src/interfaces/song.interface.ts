@@ -1,5 +1,3 @@
-import { Vote } from "./vote.interface";
-
 export interface Song {
   uuid: string;
   orderId: number;
@@ -26,5 +24,8 @@ export interface SongOutput {
   sampleLength: number;
   urlVideo: string;
   urlAudio: string;
-  voters: Vote[];
+  voters: {
+    name: string;
+    rank: number;
+  };
 }
