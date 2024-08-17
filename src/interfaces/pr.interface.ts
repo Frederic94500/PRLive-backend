@@ -13,6 +13,7 @@ export interface PR {
     finished: boolean;
     hashKey: string;
     numberSongs: number;
+    mustBe: number;
     songList: Song[];
     anisongDb: AnisongDb[];
 }
@@ -26,6 +27,7 @@ export interface PROutput {
     deadline: number;
     numberVoters: number;
     numberSongs: number;
+    mustBe: number;
     songList: SongOutput[];
     voters: UserOutput[];
 }

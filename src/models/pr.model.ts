@@ -39,6 +39,10 @@ const PRSchema = new Schema({
     type: Number,
     required: true,
   },
+  mustBe: {
+    type: Number,
+    required: true,
+  },
   songList: {
     type: [
       {

@@ -62,6 +62,7 @@ export class PRService {
     prData.creator = creatorId;
     prData.hashKey = hashKey(prData);
     prData.numberSongs = prData.songList.length;
+    prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
     console.log('haskeyed');
     try {
       await PRModel.create(prData);
@@ -91,6 +92,7 @@ export class PRService {
     pr.songList.push(songData);
     pr.hashKey = hashKey(pr);
     pr.numberSongs = pr.songList.length;
+    pr.mustBe = (pr.numberSongs * (pr.numberSongs + 1)) / 2;
     await pr.save();
   }
 
@@ -135,6 +137,7 @@ export class PRService {
       deadline: pr.deadline,
       numberVoters: sheets.length,
       numberSongs: pr.songList.length,
+      mustBe: pr.mustBe,
       songList: pr.songList
         .map(song => {
           return {
