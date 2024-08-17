@@ -1,7 +1,6 @@
 import { Document, Schema, model } from 'mongoose';
 
 import { PR } from '@/interfaces/pr.interface';
-import { hashKey } from '@/utils/toolbox';
 
 const PRSchema = new Schema({
   name: {
@@ -74,15 +73,15 @@ const PRSchema = new Schema({
         },
         sampleLength: {
           type: Number,
-          required: true,
+          required: false,
         },
         urlVideo: {
           type: String,
-          required: true,
+          required: false,
         },
         urlAudio: {
           type: String,
-          required: true,
+          required: false,
         },
       },
     ],

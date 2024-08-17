@@ -1,4 +1,4 @@
-import { Song, SongOutput } from "./song.interface";
+import { AnisongDb, Song, SongOutput } from "./song.interface";
 
 import { UserOutput } from "./user.interface";
 
@@ -13,6 +13,7 @@ export interface PR {
     finished: boolean;
     hashKey: string;
     songList: Song[];
+    anisongDb: AnisongDb[];
 }
 
 export interface PROutput {

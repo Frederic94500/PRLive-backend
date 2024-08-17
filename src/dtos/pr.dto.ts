@@ -1,6 +1,6 @@
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString, ValidateNested, isString } from 'class-validator';
+import { AnisongDb, Song } from '@/interfaces/song.interface';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
 
-import { Song } from '@/interfaces/song.interface';
 import { Type } from 'class-transformer';
 
 export class CreatePRDto {
@@ -20,11 +20,17 @@ export class CreatePRDto {
   @IsNotEmpty()
   public deadline: number;
 
-  @IsArray()
-  @IsNotEmpty()
-  @Type(() => SongListDto)
-  @ValidateNested({ each: true })
-  public songList: Song[];
+  // @IsArray()
+  // @ValidateNested({ each: true })
+  // @Type(() => SongListDto)
+  // @IsOneOfTwoFieldsNotEmpty('anisongDb', { message: 'Either songList or anisongDb must be non-empty' })
+  // public songList: Song[];
+
+  // @IsArray()
+  // @ValidateNested({ each: true })
+  // @Type(() => AnisongDbDto)
+  // @IsOneOfTwoFieldsNotEmpty('songList', { message: 'Either songList or anisongDb must be non-empty' })
+  // public anisongDb: AnisongDb[];
 }
 
 export class SongListDto {
@@ -36,7 +42,44 @@ export class SongListDto {
   @IsNotEmpty()
   public title: string;
 
+  // @IsString()
+  // @IsNotEmpty()
+  // public urlVideo: string;
+}
+
+export class AnisongDbDto {
   @IsString()
   @IsNotEmpty()
-  public urlVideo: string;
+  public artist: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  public title: string;
+
+  // @IsString()
+  // @IsNotEmpty()
+  // public urlVideo: string;
+}
+
+export function IsOneOfTwoFieldsNotEmpty(property: string, validationOptions?: ValidationOptions) {
+  return function (object: Object, propertyName: string) {
+    registerDecorator({
+      name: 'isOneOfTwoFieldsNotEmpty',
+      target: object.constructor,
+      propertyName: propertyName,
+      options: validationOptions,
+      constraints: [property],
+      validator: {
+        validate(value: any, args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          const relatedValue = (args.object as any)[relatedPropertyName];
+          return (value && value.length > 0) || (relatedValue && relatedValue.length > 0);
+        },
+        defaultMessage(args: ValidationArguments) {
+          const [relatedPropertyName] = args.constraints;
+          return `Either ${args.property} or ${relatedPropertyName} must be non-empty`;
+        },
+      },
+    });
+  };
 }

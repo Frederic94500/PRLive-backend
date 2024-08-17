@@ -1,3 +1,4 @@
+import { AnisongDb, Song } from '@/interfaces/song.interface';
 import { PR, PROutput } from '@/interfaces/pr.interface';
 
 import { HttpException } from '@/exceptions/httpException';
@@ -9,20 +10,70 @@ import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { hashKey } from '@/utils/toolbox';
 import { v4 as uuidv4 } from 'uuid';
+import { writeFile } from 'fs';
 
 @Service()
 export class PRService {
-  public async createPR(prData: PR, creatorId: string): Promise<void> {
-    prData.songList = prData.songList.map((song, index) => {
+  private parseAnisongDb(anisongDb: AnisongDb[]): Song[] {
+    return anisongDb.map((song, index) => {
+      return {
+        uuid: uuidv4(),
+        orderId: index,
+        nominatedId: null,
+        artist: song.songArtist,
+        title: song.songName,
+        anime: song.animeJPName,
+        type: song.songType,
+        startSample: 0,
+        sampleLength: song.songLength,
+        urlVideo: song.HQ || song.MQ,
+        urlAudio: song.audio || song.HQ || song.MQ,
+      };
+    });
+  }
+
+  private parseSongList(songList: Song[]): Song[] {
+    return songList.map((song, index) => {
       song.uuid = uuidv4();
       song.orderId = index;
       return song;
     });
+  }
+  
+  public async createPR(prData: PR, creatorId: string): Promise<void> {
+    // if (prData.songList.length === 0) {
+    //   throw new HttpException(400, `No songs in PR`);
+    // }
+
+    console.log("OK");
+
+    if (prData.anisongDb.length > 0) {
+      console.log("ani");
+      prData.songList = this.parseAnisongDb(prData.anisongDb);
+      prData.anisongDb = [];
+    } else {
+      console.log("std");
+      prData.songList = this.parseSongList(prData.songList);
+    }
+
+    console.log("parsed");
+
     prData.deadlineNomination = prData.deadlineNomination || 0;
     prData.finished = false;
     prData.creator = creatorId;
     prData.hashKey = hashKey(prData);
-    await PRModel.create(prData);
+    console.log("haskeyed");
+    writeFile(`./${prData.hashKey}.json`, JSON.stringify(prData), (err) => {
+      if (err) {
+        console.log(err);
+      }
+    });
+    try {
+      await PRModel.create(prData);
+    } catch (err) {
+      console.log(err);
+    }
+    console.log("created");
   }
 
   public async output(prId: string): Promise<PROutput> {
