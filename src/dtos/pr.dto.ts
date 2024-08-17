@@ -1,5 +1,5 @@
 import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
+import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
 
 import { Type } from 'class-transformer';
 
@@ -82,4 +82,61 @@ export function IsOneOfTwoFieldsNotEmpty(property: string, validationOptions?: V
       },
     });
   };
+}
+
+export class AddSongPRDto {
+  @IsString()
+  @IsNotEmpty()
+  public artist: string;
+  
+  @IsString()
+  @IsNotEmpty()
+  public title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public type: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public startSample: number;
+  
+  @IsNumber()
+  @IsNotEmpty()
+  public sampleLength: number;
+
+  @IsString()
+  @IsNotEmpty()
+  public urlVideo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public urlAudio: string;
+}
+
+export class UpdatePRDto {
+  @IsString()
+  @IsNotEmpty()
+  public name: string;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  public nomination: boolean;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  public blind: boolean;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public deadline: number;
+
+  @IsBoolean()
+  @IsNotEmpty()
+  public finished: boolean;
+
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => SongListDto)
+  public songList: Song[];
 }

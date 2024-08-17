@@ -12,6 +12,7 @@ export interface PR {
     deadline: number;
     finished: boolean;
     hashKey: string;
+    numberSongs: number;
     songList: Song[];
     anisongDb: AnisongDb[];
 }
