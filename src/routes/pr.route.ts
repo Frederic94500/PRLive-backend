@@ -20,8 +20,9 @@ export class PRRoute implements Routes {
     this.router.post(`${this.path}/addsong/:id`, checkCreator, ValidationMiddleware(AddSongPRDto),this.prController.addSongPR);
     this.router.put(`${this.path}/update/:id`, checkCreator, ValidationMiddleware(UpdatePRDto), this.prController.updatePR);
     this.router.get(`${this.path}/output/:id`, checkCreator, this.prController.output);
+    this.router.delete(`${this.path}/delete/:id`, checkCreator, this.prController.deletePR);
     this.router.get(`${this.path}/get/:id`, checkCreator, this.prController.getPR);
-    this.router.get(`${this.path}/gets`, this.prController.gets);
+    this.router.get(`${this.path}/gets`, checkCreator, this.prController.gets);
     this.router.get(`${this.path}/getsimple`, this.prController.getSimple);
   }
 }

@@ -181,6 +181,17 @@ export class PRService {
     return prOutput;
   }
 
+  public async deletePR(prId: string): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    SheetModel.deleteMany({ prId });
+
+    await pr.deleteOne();
+  }
+
   public async getPRs(): Promise<PR[]> {
     const prs: PR[] = await PRModel.find();
     return prs;

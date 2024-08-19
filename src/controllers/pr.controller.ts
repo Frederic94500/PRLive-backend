@@ -14,7 +14,7 @@ export class PRController {
       const prData: PR = req.body;
       await this.prService.createPR(prData, req.user.id);
 
-      sendJSON(res, 201, 'created');
+      sendJSON(res, 201, 'Created');
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }
@@ -65,6 +65,17 @@ export class PRController {
       sendJSON(res, error.status, error.message);
     }
   };
+
+  public deletePR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      await this.prService.deletePR(prId);
+
+      sendJSON(res, 200, 'Deleted');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
 
   public gets = async (req: Request, res: Response) => {
     try {
