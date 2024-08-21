@@ -17,12 +17,11 @@ export class AuthController {
     }
   };
 
-  public whoAmI = async (req: Request & { user: { id: string; username: string; avatar: string } }, res: Response) => {
+  public whoAmI = async (req: Request & { user: { id: string; } }, res: Response) => {
     try {
       const id = req.user.id;
-      const username = req.user.username;
-      const avatar = req.user.avatar;
-      sendJSON(res, 200, { id, username, avatar });
+      const user = await this.auth.whoAmI(id);
+      sendJSON(res, 200, user);
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }

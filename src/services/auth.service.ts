@@ -1,3 +1,4 @@
+import { HttpException } from '@/exceptions/httpException';
 import { Service } from 'typedi';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
@@ -17,5 +18,14 @@ export class AuthService {
       
       await UserModel.create(user);
     }
+  }
+
+  public async whoAmI(reqUser: string): Promise<User> {
+    const user: User = await UserModel.findOne({ discordId: reqUser }, { _id: 0, __v: 0 });
+    if (!user) {
+      throw new HttpException(404, 'User not found');
+    }
+    
+    return user;
   }
 }
