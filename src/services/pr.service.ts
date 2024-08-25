@@ -198,10 +198,17 @@ export class PRService {
   }
 
   public async getSimple(): Promise<PR[]> {
+    const users: User[] = await UserModel.find();
     const prs: PR[] = await PRModel.find(
       {},
-      { name: 1, creator: 1, nomination: 1, blind: 1, deadlineNomination: 1, deadline: 1, finished: 1, numberSongs: 1 },
+      { _id: 1, name: 1, creator: 1, nomination: 1, blind: 1, deadlineNomination: 1, deadline: 1, finished: 1, numberSongs: 1 },
     );
+
+    prs.forEach(pr => {
+      const creator = users.find(user => user.discordId === pr.creator);
+      pr.creator = creator ? creator.name : pr.creator;
+    });
+
     return prs;
   }
 }

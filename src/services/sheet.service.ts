@@ -9,7 +9,7 @@ import { hashKey } from '@/utils/toolbox';
 @Service()
 export class SheetService {
   public async getId(prId: string, userId: string): Promise<Sheet> {
-    let sheet: Sheet = await SheetModel.findOne({ id: prId, voterId: userId });
+    let sheet: Sheet = await SheetModel.findOne({ prId: prId, voterId: userId });
 
     if (sheet) {
       return sheet;
