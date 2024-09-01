@@ -57,7 +57,7 @@ export class PRService {
 
     console.log('parsed');
 
-    prData.deadlineNomination = prData.deadlineNomination || 0;
+    prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : Date.now().toString();
     prData.finished = false;
     prData.creator = creatorId;
     prData.hashKey = hashKey(prData);

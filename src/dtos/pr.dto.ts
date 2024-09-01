@@ -1,5 +1,5 @@
 import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { IsArray, IsBoolean, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
+import { IsArray, IsBoolean, IsDate, IsDateString, IsISO8601, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
 
 import { Type } from 'class-transformer';
 
@@ -16,9 +16,9 @@ export class CreatePRDto {
   @IsNotEmpty()
   public blind: boolean;
 
-  @IsNumber()
+  @IsISO8601({ strict: true })
   @IsNotEmpty()
-  public deadline: number;
+  public deadline: string;
 
   // @IsArray()
   // @ValidateNested({ each: true })

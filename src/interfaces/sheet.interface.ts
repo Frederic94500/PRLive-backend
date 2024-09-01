@@ -2,6 +2,7 @@ export interface Sheet {
     _id?: string;
     prId: string;
     voterId: string;
+    latestUpdate: string;
     sheet: SheetSong[];
 }
 

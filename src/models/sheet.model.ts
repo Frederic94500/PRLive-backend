@@ -11,6 +11,10 @@ const SheetSchema = new Schema({
     type: String,
     required: true,
   },
+  latestUpdate: {
+    type: Date,
+    required: true,
+  },
   sheet: {
     type: [
       {

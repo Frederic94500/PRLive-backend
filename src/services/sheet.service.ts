@@ -19,6 +19,7 @@ export class SheetService {
     sheet = {
       prId: prId,
       voterId: userId,
+      latestUpdate: Date.now().toString(),
       sheet: pr.songList.map(song => {
         return {
           uuid: song.uuid,
@@ -42,6 +43,8 @@ export class SheetService {
     if (hashkey !== pr.hashKey) {
       throw new HttpException(400, 'Invalid sheet data by hashkey');
     }
+
+    sheetData.latestUpdate = Date.now().toString();
     
     await SheetModel.findByIdAndUpdate(sheetData._id, sheetData);
   }
