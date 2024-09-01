@@ -40,21 +40,24 @@ export class PRService {
   }
 
   public async createPR(prData: PR, creatorId: string): Promise<void> {
-    // if (prData.songList.length === 0) {
-    //   throw new HttpException(400, `No songs in PR`);
-    // }
+    console.log('creating');
 
-    console.log('OK');
-
-    if (prData.anisongDb.length > 0) {
-      console.log('ani');
-      prData.songList = this.parseAnisongDb(prData.anisongDb);
-      prData.anisongDb = [];
-    } else {
-      console.log('std');
-      prData.songList = this.parseSongList(prData.songList);
+    try {
+      if (prData.songList.length !== 0) {
+        if ('animeJPName' in prData.songList[0]) {
+          console.log('ani');
+          prData.songList = this.parseAnisongDb(prData.songList);
+        } else {
+          console.log('std');
+          prData.songList = this.parseSongList(prData.songList);
+        }
+      } else {
+        prData.songList = [];
+      }
+    } catch (err) {
+      throw new HttpException(400, `Error parsing song list: ${err}`);
     }
-
+    
     console.log('parsed');
 
     prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : Date.now().toString();
@@ -64,6 +67,7 @@ export class PRService {
     prData.numberSongs = prData.songList.length;
     prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
     console.log('haskeyed');
+
     try {
       await PRModel.create(prData);
       console.log('created');
