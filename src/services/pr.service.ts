@@ -183,6 +183,8 @@ export class PRService {
       }),
     };
 
+    prOutput.songList.sort((a, b) => b.totalRank - a.totalRank);
+
     return prOutput;
   }
 
