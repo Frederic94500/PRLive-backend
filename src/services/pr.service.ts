@@ -165,6 +165,7 @@ export class PRService {
               const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
               return {
                 name: voter.name,
+                discordId: voter.discordId,
                 rank: sheetSong.rank,
               };
             }),

@@ -81,6 +81,7 @@ export interface SongOutput {
   totalRank: number;
   voters: {
     name: string;
+    discordId: string;
     rank: number;
   }[];
 }
