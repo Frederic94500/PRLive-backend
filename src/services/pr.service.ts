@@ -178,6 +178,7 @@ export class PRService {
           username: voter.username,
           name: voter.name,
           image: voter.image,
+          hasFinished: sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe,
         };
       }),
     };

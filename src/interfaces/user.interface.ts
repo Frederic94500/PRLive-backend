@@ -12,4 +12,5 @@ export interface UserOutput {
   username: string;
   name: string;
   image: string;
+  hasFinished: boolean;
 }
