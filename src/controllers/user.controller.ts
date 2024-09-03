@@ -17,6 +17,17 @@ export class UserController {
     }
   };
 
+  public getUserById = async (req: Request, res: Response) => {
+    try {
+      const userId: string = req.params.id;
+      const user = await this.user.getUser(userId);
+
+      sendJSON(res, 200, user);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  };
+
   public editUser = async (req: Request & { user: { id: string }}, res: Response) => {
     try {
       const userData = req.body;
