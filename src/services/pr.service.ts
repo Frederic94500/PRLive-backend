@@ -163,23 +163,38 @@ export class PRService {
             voters: sheets.map(sheet => {
               const voter = users.find(user => user.discordId === sheet.voterId);
               const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
-              return {
-                name: voter.name,
-                discordId: voter.discordId,
-                rank: sheetSong.rank,
-              };
-            }),
+            
+              const isFinished = sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe;
+              const ranks = sheet.sheet.map(sheetSong => sheetSong.rank);
+              const uniqueRanks = new Set(ranks);
+            
+              if (isFinished && ranks.length === uniqueRanks.size) {
+                return {
+                  name: voter.name,
+                  discordId: voter.discordId,
+                  rank: sheetSong.rank,
+                };
+              }
+            
+              return null;
+            }).filter(voter => voter !== null),
           };
         })
         .sort((a, b) => a.orderId - b.orderId),
       voters: sheets.map(sheet => {
         const voter = users.find(user => user.discordId === sheet.voterId);
+
+        const isFinished = sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe;
+        const ranks = sheet.sheet.map(sheetSong => sheetSong.rank);
+        const uniqueRanks = new Set(ranks);
         return {
           discordId: voter.discordId,
           username: voter.username,
           name: voter.name,
           image: voter.image,
-          hasFinished: sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe,
+          hasFinished: isFinished && ranks.length === uniqueRanks.size,
+          staller: !isFinished,
+          doubleRank: ranks.length !== uniqueRanks.size,
         };
       }),
     };

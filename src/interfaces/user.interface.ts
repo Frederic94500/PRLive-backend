@@ -13,4 +13,6 @@ export interface UserOutput {
   name: string;
   image: string;
   hasFinished: boolean;
+  staller: boolean;
+  doubleRank: boolean;
 }
