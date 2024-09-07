@@ -77,17 +77,6 @@ export class PRController {
     }
   }
 
-  public getDetail = async (req: Request, res: Response) => {
-    try {
-      const prId: string = req.params.id;
-      const pr: PROutput = await this.prService.output(prId);
-
-      sendJSON(res, 200, pr);
-    } catch (error) {
-      sendJSON(res, error.status, error.message);
-    }
-  }
-
   public gets = async (req: Request, res: Response) => {
     try {
       const prs: PR[] = await this.prService.getPRs();
