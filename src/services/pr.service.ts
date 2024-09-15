@@ -25,8 +25,8 @@ export class PRService {
         type: song.songType,
         startSample: 0,
         sampleLength: song.songLength,
-        urlVideo: song.HQ || song.MQ,
-        urlAudio: song.audio || song.HQ || song.MQ,
+        urlVideo: "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
+        urlAudio: "https://ladist1.catbox.video/" + song.audio || "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
       };
     });
   }
