@@ -11,7 +11,7 @@ export class AuthService {
       const user: User = {
         discordId: reqUser.id,
         username: reqUser.username,
-        name: reqUser.username,
+        name: reqUser.username.charAt(0).toUpperCase() + reqUser.username.slice(1),
         image: `https://cdn.discordapp.com/avatars/${reqUser.id}/${reqUser.avatar}.png`,
         role: 'user',
       };
