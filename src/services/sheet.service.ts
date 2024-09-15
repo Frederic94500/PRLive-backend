@@ -43,6 +43,9 @@ export class SheetService {
     if (hashkey !== pr.hashKey) {
       throw new HttpException(400, 'Invalid sheet data by hashkey');
     }
+    if (pr.finished) {
+      throw new HttpException(400, 'PR is finished, no more editing');
+    }
 
     sheetData.latestUpdate = Date.now().toString();
     
