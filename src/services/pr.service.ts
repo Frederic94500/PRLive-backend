@@ -160,6 +160,7 @@ export class PRService {
               const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
               return acc + sheetSong.rank;
             }, 0),
+            rankPosition: null,
             voters: sheets.map(sheet => {
               const voter = users.find(user => user.discordId === sheet.voterId);
               const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
@@ -200,6 +201,10 @@ export class PRService {
     };
 
     prOutput.songList.sort((a, b) => b.totalRank - a.totalRank);
+
+    prOutput.songList.forEach((song, index) => {
+      song.rankPosition = prOutput.songList.length - index;
+    });
 
     return prOutput;
   }

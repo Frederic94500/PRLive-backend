@@ -79,6 +79,7 @@ export interface SongOutput {
   urlVideo: string;
   urlAudio: string;
   totalRank: number;
+  rankPosition: number;
   voters: {
     name: string;
     discordId: string;
