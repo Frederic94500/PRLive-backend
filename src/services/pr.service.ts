@@ -24,7 +24,7 @@ export class PRService {
         anime: song.animeJPName,
         type: song.songType,
         startSample: 0,
-        sampleLength: song.songLength,
+        sampleLength: 30,
         urlVideo: "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
         urlAudio: "https://ladist1.catbox.video/" + song.audio || "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
       };
@@ -60,7 +60,7 @@ export class PRService {
     
     console.log('parsed');
 
-    prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : Date.now().toString();
+    prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : null;
     prData.finished = false;
     prData.creator = creatorId;
     prData.hashKey = hashKey(prData);
@@ -91,8 +91,15 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
+    const sheets = await SheetModel.find({ prId });
+
     songData.uuid = uuidv4();
     songData.orderId = pr.songList.length;
+    sheets.forEach(sheet => {
+      sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null });
+      sheet.save();
+    });
+    
     pr.songList.push(songData);
     pr.hashKey = hashKey(pr);
     pr.numberSongs = pr.songList.length;
@@ -100,18 +107,36 @@ export class PRService {
     await pr.save();
   }
 
+  private verifySongList(prData: PR, prDB: PR): void {
+    if (prData.songList.length !== prDB.songList.length) {
+      throw new HttpException(400, `Song list length doesn't match`);
+    }
+
+    if (prData.songList.some(songData => !prDB.songList.some(songDB => songData.uuid === songDB.uuid))) {
+      throw new HttpException(400, `Song list doesn't match (uuid)`);
+    }
+
+    prData.songList.forEach((songData, index) => {
+      const songDB = prDB.songList.find(song => song.uuid === songData.uuid);
+      if (songData.orderId !== songDB.orderId) {
+        throw new HttpException(400, `Song list doesn't match (orderId)`);
+      }
+    });
+  }
+
   public async updatePR(prId: string, prData: PR): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
     }
+    this.verifySongList(prData, pr);
 
     pr.name = prData.name;
     pr.nomination = prData.nomination;
     pr.blind = prData.blind;
     pr.deadlineNomination = prData.deadlineNomination;
     pr.deadline = prData.deadline;
-    pr.hashKey = hashKey(prData);
+    pr.finished = prData.finished;
     pr.songList = prData.songList;
     await pr.save();
   }

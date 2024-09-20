@@ -1,5 +1,5 @@
 import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { IsArray, IsBoolean, IsDate, IsDateString, IsISO8601, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, isString, registerDecorator } from 'class-validator';
+import { IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 
 import { Type } from 'class-transformer';
 
@@ -34,6 +34,10 @@ export class CreatePRDto {
 }
 
 export class SongListDto {
+  @IsUUID()
+  @IsNotEmpty()
+  public uuid: string;
+
   @IsString()
   @IsNotEmpty()
   public artist: string;
@@ -41,6 +45,10 @@ export class SongListDto {
   @IsString()
   @IsNotEmpty()
   public title: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public type: string;
 
   // @IsString()
   // @IsNotEmpty()
@@ -59,29 +67,6 @@ export class AnisongDbDto {
   // @IsString()
   // @IsNotEmpty()
   // public urlVideo: string;
-}
-
-export function IsOneOfTwoFieldsNotEmpty(property: string, validationOptions?: ValidationOptions) {
-  return function (object: Object, propertyName: string) {
-    registerDecorator({
-      name: 'isOneOfTwoFieldsNotEmpty',
-      target: object.constructor,
-      propertyName: propertyName,
-      options: validationOptions,
-      constraints: [property],
-      validator: {
-        validate(value: any, args: ValidationArguments) {
-          const [relatedPropertyName] = args.constraints;
-          const relatedValue = (args.object as any)[relatedPropertyName];
-          return (value && value.length > 0) || (relatedValue && relatedValue.length > 0);
-        },
-        defaultMessage(args: ValidationArguments) {
-          const [relatedPropertyName] = args.constraints;
-          return `Either ${args.property} or ${relatedPropertyName} must be non-empty`;
-        },
-      },
-    });
-  };
 }
 
 export class AddSongPRDto {
@@ -119,6 +104,10 @@ export class UpdatePRDto {
   @IsNotEmpty()
   public name: string;
 
+  @IsString()
+  @IsNotEmpty()
+  public creator: string;
+
   @IsBoolean()
   @IsNotEmpty()
   public nomination: boolean;
@@ -127,13 +116,29 @@ export class UpdatePRDto {
   @IsNotEmpty()
   public blind: boolean;
 
-  @IsNumber()
+  @IsISO8601({ strict: true })
+  @IsNotEmpty()
+  public deadlineNomination: string;
+
+  @IsISO8601({ strict: true })
   @IsNotEmpty()
   public deadline: number;
 
   @IsBoolean()
   @IsNotEmpty()
   public finished: boolean;
+
+  @IsString()
+  @IsNotEmpty()
+  public hashKey: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public numberSongs: number;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public mustBe: number;
 
   @IsArray()
   @ValidateNested({ each: true })
