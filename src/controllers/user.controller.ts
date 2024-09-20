@@ -28,6 +28,16 @@ export class UserController {
     }
   };
 
+  public getUsers = async (req: Request, res: Response) => {
+    try {
+      const users = await this.user.getUsers();
+
+      sendJSON(res, 200, users);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  };
+
   public editUser = async (req: Request & { user: { id: string }}, res: Response) => {
     try {
       const userData = req.body;

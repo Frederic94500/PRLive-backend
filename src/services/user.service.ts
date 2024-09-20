@@ -13,6 +13,11 @@ export class UserService {
     return findUser;
   }
 
+  public async getUsers(): Promise<User[]> {
+    const users: User[] = await UserModel.find();
+    return users;
+  }
+
   public async editUser(userData: User, userId: string): Promise<User> {
     const updateUserById: User = await UserModel.findOneAndUpdate({ discordId: userId }, { name: userData.name, image: userData.image }, { new: true });
     if (!updateUserById) throw new HttpException(404, "User doesn't exist");
