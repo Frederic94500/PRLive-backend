@@ -1,8 +1,8 @@
 version: "3.9"
 
 services:
-  backend:
-    container_name: backend
+  backend-pr:
+    container_name: backend-pr
     build:
       context: ./
       dockerfile: Dockerfile.prod
