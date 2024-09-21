@@ -17,6 +17,7 @@ export interface PR {
 }
 
 export interface PROutput {
+  _id: string;
   name: string;
   creator: string;
   nomination: boolean;

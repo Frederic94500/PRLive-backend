@@ -158,6 +158,7 @@ export class PRService {
     }
 
     const prOutput: PROutput = {
+      _id: pr._id,
       name: pr.name,
       creator: pr.creator,
       nomination: pr.nomination,
