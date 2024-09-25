@@ -1,4 +1,5 @@
-import { SongOutput } from './song.interface';
+import { SongOutput, TiebreakSong as TieSong } from './song.interface';
+
 import { UserOutput } from './user.interface';
 
 export interface PR {
@@ -16,6 +17,12 @@ export interface PR {
   songList: any[];
 }
 
+export interface Tie {
+  prId: string;
+  status: boolean;
+  tieSong: TieSong[];
+}
+
 export interface PROutput {
   _id: string;
   name: string;
@@ -27,6 +34,7 @@ export interface PROutput {
   numberVoters: number;
   numberSongs: number;
   mustBe: number;
+  tie: Tie;
   songList: SongOutput[];
   voters: UserOutput[];
 }

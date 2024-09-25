@@ -64,6 +64,7 @@ export interface Song {
   sampleLength: number;
   urlVideo: string;
   urlAudio: string;
+  tiebreak: number;
 }
 
 export interface SongOutput {
@@ -78,6 +79,7 @@ export interface SongOutput {
   sampleLength: number;
   urlVideo: string;
   urlAudio: string;
+  tiebreak: number;
   totalRank: number;
   rankPosition: number;
   voters: {
@@ -85,4 +87,15 @@ export interface SongOutput {
     discordId: string;
     rank: number;
   }[];
+}
+
+export interface TiebreakSong {
+  uuid: string;
+  urlAudio: string;
+  totalRank: number;
+}
+
+export interface TiebreakWinner {
+  prId: string;
+  uuid: string;
 }

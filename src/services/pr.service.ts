@@ -1,5 +1,5 @@
-import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { PR, PROutput } from '@/interfaces/pr.interface';
+import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
+import { PR, PROutput, Tie } from '@/interfaces/pr.interface';
 
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
@@ -27,6 +27,7 @@ export class PRService {
         sampleLength: 30,
         urlVideo: "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
         urlAudio: "https://ladist1.catbox.video/" + song.audio || "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
+        tiebreak: 0,
       };
     });
   }
@@ -35,6 +36,7 @@ export class PRService {
     return songList.map((song, index) => {
       song.uuid = uuidv4();
       song.orderId = index;
+      song.tiebreak = 0;
       return song;
     });
   }
@@ -141,6 +143,48 @@ export class PRService {
     await pr.save();
   }
 
+  private checkTie(pr: PROutput): Tie {
+    const tiebreak: Tie = {
+      prId: pr._id,
+      status: false,
+      tieSong: [],
+    };
+  
+    const totalRanks = pr.songList.map(song => song.totalRank);
+    const duplicateRanks = totalRanks.filter((rank, index) => totalRanks.indexOf(rank) !== index);
+    const tieSongs = pr.songList.filter(song => duplicateRanks.includes(song.totalRank));
+  
+    if (tieSongs.length > 0) {
+      tiebreak.status = true;
+  
+      const resolvedTiebreaks = tieSongs.filter(song => song.tiebreak !== 0);
+      const unresolvedTiebreaks = tieSongs.filter(song => song.tiebreak === 0);
+  
+      if (resolvedTiebreaks.length > 0) {
+        resolvedTiebreaks.sort((a, b) => b.tiebreak - a.tiebreak);
+        tiebreak.tieSong.push(...resolvedTiebreaks.map(song => ({
+          uuid: song.uuid,
+          urlAudio: song.urlAudio,
+          totalRank: song.totalRank,
+        })));
+      }
+  
+      if (unresolvedTiebreaks.length > 0) {
+        tiebreak.tieSong.push(...unresolvedTiebreaks.map(song => ({
+          uuid: song.uuid,
+          urlAudio: song.urlAudio,
+          totalRank: song.totalRank,
+        })));
+      }
+  
+      if (unresolvedTiebreaks.length === 0 && resolvedTiebreaks.length > 0) {
+        tiebreak.status = false;
+      }
+    }
+  
+    return tiebreak;
+  }
+
   public async output(prId: string): Promise<PROutput> {
     const pr: PR = await PRModel.findById(prId);
     if (!pr) {
@@ -168,6 +212,7 @@ export class PRService {
       numberVoters: sheets.length,
       numberSongs: pr.songList.length,
       mustBe: pr.mustBe,
+      tie: null,
       songList: pr.songList
         .map(song => {
           return {
@@ -182,6 +227,7 @@ export class PRService {
             sampleLength: song.sampleLength,
             urlVideo: song.urlVideo,
             urlAudio: song.urlAudio,
+            tiebreak: song.tiebreak,
             totalRank: sheets.reduce((acc, sheet) => {
               const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
               return acc + sheetSong.rank;
@@ -226,13 +272,51 @@ export class PRService {
       }),
     };
 
-    prOutput.songList.sort((a, b) => b.totalRank - a.totalRank);
+    prOutput.songList.sort((a, b) => {
+      if (a.totalRank === b.totalRank) {
+        return a.tiebreak - b.tiebreak;
+      }
+      return b.totalRank - a.totalRank;
+    });
 
     prOutput.songList.forEach((song, index) => {
       song.rankPosition = prOutput.songList.length - index;
     });
 
+    prOutput.tie = this.checkTie(prOutput);
+    
     return prOutput;
+  }
+
+  public async getTie(prId: string): Promise<Tie> {
+    const pr: PROutput = await this.output(prId);
+
+    return pr.tie;
+  }
+
+  public async tiebreak(prId: string, data: TiebreakWinner, discordId: string): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    const tie = await this.getTie(prId);
+    if (!tie.status) {
+      throw new HttpException(400, `No tie to break`);
+    }
+
+    const sheet = await SheetModel.findOne({ prId, voterId: discordId });
+    if (sheet) {
+      throw new HttpException(400, `You already voted, you can't break the tie`);
+    }
+
+    const songWinner = pr.songList.find(song => song.uuid === data.uuid);
+    const songsLosers = pr.songList.filter(song => song.totalRank === songWinner.totalRank && song.uuid !== songWinner.uuid);
+
+    songWinner.tiebreak += 1;
+    songsLosers.forEach(song => song.tiebreak -= 1);
+
+    await pr.save();
   }
 
   public async deletePR(prId: string): Promise<void> {

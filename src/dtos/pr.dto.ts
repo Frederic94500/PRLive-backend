@@ -145,3 +145,13 @@ export class UpdatePRDto {
   @Type(() => SongListDto)
   public songList: Song[];
 }
+
+export class TiebreakDto {
+  @IsString()
+  @IsNotEmpty()
+  public prId: string;
+
+  @IsUUID()
+  @IsNotEmpty()
+  public uuid: string;
+}

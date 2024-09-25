@@ -91,6 +91,10 @@ const PRSchema = new Schema({
           type: String,
           required: false,
         },
+        tiebreak: {
+          type: Number,
+          required: true,
+        },
       },
     ],
     required: true,

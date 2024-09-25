@@ -1,9 +1,9 @@
 import { PR, PROutput } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
+import { Song, TiebreakWinner } from '@/interfaces/song.interface';
 
 import { Container } from 'typedi';
 import { PRService } from '@/services/pr.service';
-import { Song } from '@/interfaces/song.interface';
 import { sendJSON } from '@/utils/toolbox';
 
 export class PRController {
@@ -65,6 +65,31 @@ export class PRController {
       sendJSON(res, error.status, error.message);
     }
   };
+
+  public getTie = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      
+      const tie = await this.prService.getTie(prId);
+
+      sendJSON(res, 200, tie);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
+  public tiebreak = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const discordId: string = req.user.id;
+      const data: TiebreakWinner = req.body;
+      await this.prService.tiebreak(prId, data, discordId);
+
+      sendJSON(res, 200, 'Tiebreaked');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
 
   public deletePR = async (req: Request, res: Response) => {
     try {
