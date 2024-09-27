@@ -115,11 +115,7 @@ export class UpdatePRDto {
   @IsBoolean()
   @IsNotEmpty()
   public blind: boolean;
-
-  @IsISO8601({ strict: true })
-  @IsNotEmpty()
-  public deadlineNomination: string;
-
+  
   @IsISO8601({ strict: true })
   @IsNotEmpty()
   public deadline: number;
