@@ -1,9 +1,12 @@
+import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@/config';
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
 import { PRModel } from '@/models/pr.model';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
+import { TextChannel } from 'discord.js';
+import discordBot from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
 
 @Service()
@@ -29,7 +32,22 @@ export class SheetService {
         };
       }),
     };
-    return await SheetModel.create(sheet);
+
+    try {
+      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
+      discordChannelThread.send(`Welcome <@${userId}>\n\n Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(`Sheet created for <@${userId}> in PR: ${pr.name}`);
+    } catch (error) {
+      throw new HttpException(400, `Discord error: ${error}`);
+    }
+    
+    try {
+      return await SheetModel.create(sheet);
+    } catch (error) {
+      throw new HttpException(400, `Sheet creation failed: ${error}`);
+    }
   }
 
   public async editId(sheetData: Sheet, prId: string, userId: string): Promise<void> {

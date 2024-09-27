@@ -14,6 +14,7 @@ export interface PR {
   hashKey: string;
   numberSongs: number;
   mustBe: number;
+  threadId: string;
   songList: any[];
 }
 
@@ -34,6 +35,7 @@ export interface PROutput {
   numberVoters: number;
   numberSongs: number;
   mustBe: number;
+  threadId: string;
   tie: Tie;
   songList: SongOutput[];
   voters: UserOutput[];

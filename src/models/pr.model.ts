@@ -43,6 +43,10 @@ const PRSchema = new Schema({
     type: Number,
     required: true,
   },
+  threadId: {
+    type: String,
+    required: true,
+  },
   songList: {
     type: [
       {

@@ -1,4 +1,6 @@
 import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
+import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
+import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { PR, PROutput, Tie } from '@/interfaces/pr.interface';
 
 import { HttpException } from '@/exceptions/httpException';
@@ -8,6 +10,7 @@ import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
+import discordBot from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -25,8 +28,9 @@ export class PRService {
         type: song.songType,
         startSample: 0,
         sampleLength: 30,
-        urlVideo: "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
-        urlAudio: "https://ladist1.catbox.video/" + song.audio || "https://ladist1.catbox.video/" + song.HQ || "https://ladist1.catbox.video/" + song.MQ,
+        urlVideo: 'https://ladist1.catbox.video/' + song.HQ || 'https://ladist1.catbox.video/' + song.MQ,
+        urlAudio:
+          'https://ladist1.catbox.video/' + song.audio || 'https://ladist1.catbox.video/' + song.HQ || 'https://ladist1.catbox.video/' + song.MQ,
         tiebreak: 0,
       };
     });
@@ -59,7 +63,7 @@ export class PRService {
     } catch (err) {
       throw new HttpException(400, `Error parsing song list: ${err}`);
     }
-    
+
     console.log('parsed');
 
     prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : null;
@@ -69,6 +73,31 @@ export class PRService {
     prData.numberSongs = prData.songList.length;
     prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
     console.log('haskeyed');
+
+    try {
+      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
+      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
+
+      if (discordChannelThreads) {
+        const thread = await discordChannelThreads.threads.create({
+          name: prData.name,
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+          type: ChannelType.PrivateThread,
+          reason: `${prData.name} for <@${creatorId}>`,
+        });
+        thread.send(
+          `# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
+        );
+        prData.threadId = thread.id;
+
+        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+        discordChannelLog.send(
+          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
+        );
+      }
+    } catch (err) {
+      console.log(`Error Discord: ${err}`);
+    }
 
     try {
       await PRModel.create(prData);
@@ -101,7 +130,7 @@ export class PRService {
       sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null });
       sheet.save();
     });
-    
+
     pr.songList.push(songData);
     pr.hashKey = hashKey(pr);
     pr.numberSongs = pr.songList.length;
@@ -149,39 +178,43 @@ export class PRService {
       status: false,
       tieSong: [],
     };
-  
+
     const totalRanks = pr.songList.map(song => song.totalRank);
     const duplicateRanks = totalRanks.filter((rank, index) => totalRanks.indexOf(rank) !== index);
     const tieSongs = pr.songList.filter(song => duplicateRanks.includes(song.totalRank));
-  
+
     if (tieSongs.length > 0) {
       tiebreak.status = true;
-  
+
       const resolvedTiebreaks = tieSongs.filter(song => song.tiebreak !== 0);
       const unresolvedTiebreaks = tieSongs.filter(song => song.tiebreak === 0);
-  
+
       if (resolvedTiebreaks.length > 0) {
         resolvedTiebreaks.sort((a, b) => b.tiebreak - a.tiebreak);
-        tiebreak.tieSong.push(...resolvedTiebreaks.map(song => ({
-          uuid: song.uuid,
-          urlAudio: song.urlAudio,
-          totalRank: song.totalRank,
-        })));
+        tiebreak.tieSong.push(
+          ...resolvedTiebreaks.map(song => ({
+            uuid: song.uuid,
+            urlAudio: song.urlAudio,
+            totalRank: song.totalRank,
+          })),
+        );
       }
-  
+
       if (unresolvedTiebreaks.length > 0) {
-        tiebreak.tieSong.push(...unresolvedTiebreaks.map(song => ({
-          uuid: song.uuid,
-          urlAudio: song.urlAudio,
-          totalRank: song.totalRank,
-        })));
+        tiebreak.tieSong.push(
+          ...unresolvedTiebreaks.map(song => ({
+            uuid: song.uuid,
+            urlAudio: song.urlAudio,
+            totalRank: song.totalRank,
+          })),
+        );
       }
-  
+
       if (unresolvedTiebreaks.length === 0 && resolvedTiebreaks.length > 0) {
         tiebreak.status = false;
       }
     }
-  
+
     return tiebreak;
   }
 
@@ -212,6 +245,7 @@ export class PRService {
       numberVoters: sheets.length,
       numberSongs: pr.songList.length,
       mustBe: pr.mustBe,
+      threadId: pr.threadId,
       tie: null,
       songList: pr.songList
         .map(song => {
@@ -233,24 +267,26 @@ export class PRService {
               return acc + sheetSong.rank;
             }, 0),
             rankPosition: null,
-            voters: sheets.map(sheet => {
-              const voter = users.find(user => user.discordId === sheet.voterId);
-              const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
-            
-              const isFinished = sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe;
-              const ranks = sheet.sheet.map(sheetSong => sheetSong.rank);
-              const uniqueRanks = new Set(ranks);
-            
-              if (isFinished && ranks.length === uniqueRanks.size) {
-                return {
-                  name: voter.name,
-                  discordId: voter.discordId,
-                  rank: sheetSong.rank,
-                };
-              }
-            
-              return null;
-            }).filter(voter => voter !== null),
+            voters: sheets
+              .map(sheet => {
+                const voter = users.find(user => user.discordId === sheet.voterId);
+                const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
+
+                const isFinished = sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe;
+                const ranks = sheet.sheet.map(sheetSong => sheetSong.rank);
+                const uniqueRanks = new Set(ranks);
+
+                if (isFinished && ranks.length === uniqueRanks.size) {
+                  return {
+                    name: voter.name,
+                    discordId: voter.discordId,
+                    rank: sheetSong.rank,
+                  };
+                }
+
+                return null;
+              })
+              .filter(voter => voter !== null),
           };
         })
         .sort((a, b) => a.orderId - b.orderId),
@@ -284,7 +320,7 @@ export class PRService {
     });
 
     prOutput.tie = this.checkTie(prOutput);
-    
+
     return prOutput;
   }
 
@@ -314,7 +350,7 @@ export class PRService {
     const songsLosers = pr.songList.filter(song => song.totalRank === songWinner.totalRank && song.uuid !== songWinner.uuid);
 
     songWinner.tiebreak += 1;
-    songsLosers.forEach(song => song.tiebreak -= 1);
+    songsLosers.forEach(song => (song.tiebreak -= 1));
 
     await pr.save();
   }
