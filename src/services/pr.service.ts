@@ -28,9 +28,12 @@ export class PRService {
         type: song.songType,
         startSample: 0,
         sampleLength: 30,
-        urlVideo: 'https://ladist1.catbox.video/' + song.HQ || 'https://ladist1.catbox.video/' + song.MQ,
-        urlAudio:
-          'https://ladist1.catbox.video/' + song.audio || 'https://ladist1.catbox.video/' + song.HQ || 'https://ladist1.catbox.video/' + song.MQ,
+        urlVideo: song.HQ ? 'https://ladist1.catbox.video/' + song.HQ : 'https://ladist1.catbox.video/' + song.MQ,
+        urlAudio: song.audio
+          ? 'https://ladist1.catbox.video/' + song.audio
+          : song.HQ
+            ? 'https://ladist1.catbox.video/' + song.HQ
+            : 'https://ladist1.catbox.video/' + song.MQ,
         tiebreak: 0,
       };
     });
@@ -85,9 +88,7 @@ export class PRService {
           type: ChannelType.PrivateThread,
           reason: `${prData.name} for <@${creatorId}>`,
         });
-        thread.send(
-          `# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
-        );
+        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
         prData.threadId = thread.id;
 
         const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
@@ -225,9 +226,6 @@ export class PRService {
     }
 
     const sheets: Sheet[] = await SheetModel.find({ prId });
-    if (sheets.length === 0) {
-      throw new HttpException(404, `No sheets found for PR ${pr.name}`);
-    }
 
     const users: User[] = await UserModel.find();
     if (users.length === 0) {
@@ -242,7 +240,7 @@ export class PRService {
       blind: pr.blind,
       deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
-      numberVoters: sheets.length,
+      numberVoters: sheets.length || 0,
       numberSongs: pr.songList.length,
       mustBe: pr.mustBe,
       threadId: pr.threadId,
@@ -364,6 +362,16 @@ export class PRService {
     SheetModel.deleteMany({ prId });
 
     await pr.deleteOne();
+
+    try {
+      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
+      if (!discordChannelThread) {
+        return;
+      }
+      discordChannelThread.delete();
+    } catch (err) {
+      console.log(`Error Discord: ${err}`);
+    }
   }
 
   public async getPRs(): Promise<PR[]> {
