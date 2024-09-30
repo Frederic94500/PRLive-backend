@@ -1,3 +1,8 @@
+export interface SheetSimple {
+    prId: string;
+    finished: boolean;
+}
+
 export interface Sheet {
     _id?: string;
     prId: string;

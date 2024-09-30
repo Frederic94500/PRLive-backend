@@ -1,9 +1,10 @@
+import { checkAdmin, checkAuth, checkCreator } from '@/middlewares/auth.middleware';
+
 import { Router } from 'express';
 import { Routes } from '@/interfaces/routes.interface';
 import { SheetController } from '@/controllers/sheet.controller';
 import { SheetDto } from '@/dtos/sheet.dto';
 import { ValidationMiddleware } from '@/middlewares/validation.middleware';
-import { checkAuth } from '@/middlewares/auth.middleware';
 
 export class SheetRoute implements Routes {
   public path = '/api/sheet';
@@ -15,7 +16,10 @@ export class SheetRoute implements Routes {
   }
 
   private initializeRoutes() {
+    this.router.get(`${this.path}/gets`, checkAuth, this.sheetController.gets);
     this.router.get(`${this.path}/:prId`, checkAuth, this.sheetController.getId);
-    this.router.put(`${this.path}/:prId`, checkAuth, ValidationMiddleware(SheetDto), this.sheetController.editId);	
+    this.router.put(`${this.path}/:prId`, checkAuth, ValidationMiddleware(SheetDto), this.sheetController.editId);
+    this.router.get(`${this.path}/:prId/:voterId`, checkCreator, this.sheetController.getSheetVoter);
+    this.router.delete(`${this.path}/delete/:prId/:voterId`, checkCreator, this.sheetController.deleteSheetVoter);
   }
 }
