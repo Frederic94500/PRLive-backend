@@ -28,12 +28,8 @@ export class PRService {
         type: song.songType,
         startSample: 0,
         sampleLength: 30,
-        urlVideo: song.HQ ? 'https://ladist1.catbox.video/' + song.HQ : 'https://ladist1.catbox.video/' + song.MQ,
-        urlAudio: song.audio
-          ? 'https://ladist1.catbox.video/' + song.audio
-          : song.HQ
-            ? 'https://ladist1.catbox.video/' + song.HQ
-            : 'https://ladist1.catbox.video/' + song.MQ,
+        urlVideo: song.HQ ? song.HQ : song.MQ,
+        urlAudio: song.audio ? song.audio : song.HQ ? song.HQ : song.MQ,
         tiebreak: 0,
       };
     });

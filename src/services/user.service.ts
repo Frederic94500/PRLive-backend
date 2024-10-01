@@ -1,4 +1,5 @@
 import { HttpException } from '@exceptions/httpException';
+import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@interfaces/user.interface';
@@ -19,7 +20,7 @@ export class UserService {
   }
 
   public async editUser(userData: User, userId: string): Promise<User> {
-    const updateUserById: User = await UserModel.findOneAndUpdate({ discordId: userId }, { name: userData.name, image: userData.image }, { new: true });
+    const updateUserById: User = await UserModel.findOneAndUpdate({ discordId: userId }, { name: userData.name, image: userData.image, server: userData.server || Server.EU }, { new: true });
     if (!updateUserById) throw new HttpException(404, "User doesn't exist");
 
     return updateUserById;
