@@ -1,4 +1,5 @@
 import { HttpException } from '@/exceptions/httpException';
+import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
@@ -14,6 +15,7 @@ export class AuthService {
         name: reqUser.username.charAt(0).toUpperCase() + reqUser.username.slice(1),
         image: `https://cdn.discordapp.com/avatars/${reqUser.id}/${reqUser.avatar}.png`,
         role: 'user',
+        server: Server.EU,
       };
       
       await UserModel.create(user);
