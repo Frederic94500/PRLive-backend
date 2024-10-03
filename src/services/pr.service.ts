@@ -355,7 +355,7 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
-    SheetModel.deleteMany({ prId });
+    await SheetModel.deleteMany({ prId: prId });
 
     await pr.deleteOne();
 
