@@ -135,6 +135,29 @@ export class PRService {
     await pr.save();
   }
 
+  public async deleteSongPR(prId: string, songUuid: string): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    const sheets = await SheetModel.find({ prId });
+    sheets.forEach(sheet => {
+      const index = sheet.sheet.findIndex(song => song.uuid === songUuid);
+      sheet.sheet.splice(index, 1);
+      sheet.sheet.forEach((song, index) => (song.orderId = index));
+      sheet.save();
+    });
+
+    const index = pr.songList.findIndex(song => song.uuid === songUuid);
+    pr.songList.splice(index, 1);
+    pr.songList.forEach((song, index) => (song.orderId = index));
+    pr.hashKey = hashKey(pr);
+    pr.numberSongs = pr.songList.length;
+    pr.mustBe = (pr.numberSongs * (pr.numberSongs + 1)) / 2;
+    await pr.save();
+  }
+
   private verifySongList(prData: PR, prDB: PR): void {
     if (prData.songList.length !== prDB.songList.length) {
       throw new HttpException(400, `Song list length doesn't match`);

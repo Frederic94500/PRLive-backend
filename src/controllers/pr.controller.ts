@@ -43,6 +43,18 @@ export class PRController {
     }
   };
 
+  public deleteSongPR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const songUuid: string = req.params.uuid;
+      await this.prService.deleteSongPR(prId, songUuid);
+
+      sendJSON(res, 200, 'Song deleted');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public updatePR = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.id;

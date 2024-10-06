@@ -18,6 +18,7 @@ export class PRRoute implements Routes {
   private initializeRoutes() {
     this.router.post(`${this.path}/create`, checkCreator, ValidationMiddleware(CreatePRDto), this.prController.createPR);
     this.router.post(`${this.path}/addsong/:id`, checkCreator, ValidationMiddleware(AddSongPRDto),this.prController.addSongPR);
+    this.router.delete(`${this.path}/deletesong/:id/:uuid`, checkCreator, this.prController.deleteSongPR);
     this.router.put(`${this.path}/update/:id`, checkCreator, ValidationMiddleware(UpdatePRDto), this.prController.updatePR);
     this.router.get(`${this.path}/tie/:id`, checkCreator, this.prController.getTie);
     this.router.put(`${this.path}/tiebreak/:id`, checkAuth, ValidationMiddleware(TiebreakDto), this.prController.tiebreak);
