@@ -1,5 +1,5 @@
 import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsNumber, IsString, IsUUID, ValidateNested, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID, IsUrl, Min, ValidateNested, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 
 import { Type } from 'class-transformer';
 
@@ -50,9 +50,28 @@ export class SongListDto {
   @IsNotEmpty()
   public type: string;
 
-  // @IsString()
-  // @IsNotEmpty()
-  // public urlVideo: string;
+  @IsNumber()
+  @Min(0)
+  @IsNotEmpty()
+  public startSample: number;
+  
+  @IsNumber()
+  @IsPositive()
+  @Min(1)
+  @IsNotEmpty()
+  public sampleLength: number;
+
+  @IsString()
+  @IsNotEmpty()
+  public urlVideo: string;
+
+  @IsString()
+  @IsNotEmpty()
+  public urlAudio: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public tiebreak: number;
 }
 
 export class AnisongDbDto {
@@ -83,10 +102,13 @@ export class AddSongPRDto {
   public type: string;
 
   @IsNumber()
+  @Min(0)
   @IsNotEmpty()
   public startSample: number;
   
   @IsNumber()
+  @IsPositive()
+  @Min(1)
   @IsNotEmpty()
   public sampleLength: number;
 
@@ -97,6 +119,10 @@ export class AddSongPRDto {
   @IsString()
   @IsNotEmpty()
   public urlAudio: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public tiebreak: number;
 }
 
 export class UpdatePRDto {
