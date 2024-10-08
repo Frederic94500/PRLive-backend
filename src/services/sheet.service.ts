@@ -59,7 +59,7 @@ export class SheetService {
       prId: prId,
       voterId: userId,
       latestUpdate: Date.now().toString(),
-      name: user.image,
+      name: user.name,
       image: user.image,
       sheet: pr.songList.map(song => {
         return {
