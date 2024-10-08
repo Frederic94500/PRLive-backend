@@ -5,6 +5,8 @@ import { Routes } from '@interfaces/routes.interface';
 import { UserController } from '@/controllers/user.controller';
 import { UserDto } from '@/dtos/user.dto';
 import { ValidationMiddleware } from '@/middlewares/validation.middleware';
+import rateLimiterImage from '@/ratelimiters/image.ratelimiter';
+import upload from '@/services/multer.service';
 
 export class UserRoute implements Routes {
   public path = '/api/user';
@@ -20,6 +22,7 @@ export class UserRoute implements Routes {
     this.router.get(`${this.path}/get/:id`, this.user.getUserById);
     this.router.get(`${this.path}/gets`, checkCreator, this.user.getUsers);
     this.router.put(`${this.path}/edit`, checkAuth, ValidationMiddleware(UserDto), this.user.editUser);
+    this.router.post(`${this.path}/imageupload`, checkAuth, rateLimiterImage, upload.single('image'), this.user.imageUpload);
     this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.user.deleteUser);
   }
 }

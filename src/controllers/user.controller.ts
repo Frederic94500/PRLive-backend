@@ -49,6 +49,17 @@ export class UserController {
     }
   };
 
+  public imageUpload = async (req: Request & { user: { id: string }} & { file: Express.Multer.File }, res: Response) => {
+    try {
+      const image = req.file;
+      const url = await this.user.imageUpload(image, req.user.id);
+
+      sendJSON(res, 200, url);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public deleteUser = async (req: Request, res: Response) => {
     try {
       const userId: string = req.params.id;
