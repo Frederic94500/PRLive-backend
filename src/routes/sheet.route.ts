@@ -20,6 +20,7 @@ export class SheetRoute implements Routes {
     this.router.get(`${this.path}/:prId`, checkAuth, this.sheetController.getId);
     this.router.put(`${this.path}/:prId`, checkAuth, ValidationMiddleware(SheetDto), this.sheetController.editId);
     this.router.get(`${this.path}/:prId/:voterId`, checkCreator, this.sheetController.getSheetVoter);
+    this.router.delete(`${this.path}/delete/:prId`, checkAuth, this.sheetController.deleteSheetUser);
     this.router.delete(`${this.path}/delete/:prId/:voterId`, checkCreator, this.sheetController.deleteSheetVoter);
   }
 }

@@ -56,6 +56,18 @@ export class SheetController {
     }
   };
 
+  public deleteSheetUser = async (req: Request & { user: { id: string } }, res: Response) => {
+    try {
+      const prId: string = req.params.prId;
+      const userId: string = req.user.id;
+      await this.sheetService.deleteSheetUser(prId, userId);
+
+      sendJSON(res, 200, 'Deleted');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public deleteSheetVoter = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.prId;
