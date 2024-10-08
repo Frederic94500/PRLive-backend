@@ -8,6 +8,8 @@ export interface Sheet {
     prId: string;
     voterId: string;
     latestUpdate: string;
+    name: string;
+    image: string;
     sheet: SheetSong[];
 }
 

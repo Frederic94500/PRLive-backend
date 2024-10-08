@@ -15,6 +15,14 @@ const SheetSchema = new Schema({
     type: Date,
     required: true,
   },
+  name: {
+    type: String,
+    required: true,
+  },
+  image: {
+    type: String,
+    required: true,
+  },
   sheet: {
     type: [
       {

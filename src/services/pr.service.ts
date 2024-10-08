@@ -316,8 +316,8 @@ export class PRService {
         return {
           discordId: voter.discordId,
           username: voter.username,
-          name: voter.name,
-          image: voter.image,
+          name: sheet.name,
+          image: sheet.image,
           hasFinished: isFinished && ranks.length === uniqueRanks.size,
           staller: !isFinished,
           doubleRank: ranks.length !== uniqueRanks.size,

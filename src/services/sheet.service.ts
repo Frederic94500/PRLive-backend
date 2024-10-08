@@ -7,6 +7,8 @@ import { PR } from '@/interfaces/pr.interface';
 import { PRModel } from '@/models/pr.model';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
+import { User } from '@/interfaces/user.interface';
+import { UserModel } from '@/models/user.model';
 import discordBot from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
 
@@ -51,11 +53,14 @@ export class SheetService {
       throw new HttpException(403, 'User is not in the server');
     }
 
+    const user: User = await UserModel.findOne({ discordId: userId });
     const pr: PR = await PRModel.findById(prId);
     sheet = {
       prId: prId,
       voterId: userId,
       latestUpdate: Date.now().toString(),
+      name: user.image,
+      image: user.image,
       sheet: pr.songList.map(song => {
         return {
           uuid: song.uuid,
