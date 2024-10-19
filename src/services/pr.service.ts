@@ -286,7 +286,6 @@ export class PRService {
             rankPosition: null,
             voters: sheets
               .map(sheet => {
-                const voter = users.find(user => user.discordId === sheet.voterId);
                 const sheetSong = sheet.sheet.find(sheetSong => sheetSong.uuid === song.uuid);
 
                 const isFinished = sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe;
@@ -295,8 +294,8 @@ export class PRService {
 
                 if (isFinished && ranks.length === uniqueRanks.size) {
                   return {
-                    name: voter.name,
-                    discordId: voter.discordId,
+                    name: sheet.name,
+                    discordId: sheet.voterId,
                     rank: sheetSong.rank,
                   };
                 }
