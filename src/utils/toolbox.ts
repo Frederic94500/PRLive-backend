@@ -5,7 +5,11 @@ import { Sheet } from '@/interfaces/sheet.interface';
 import { createHash } from 'crypto';
 
 export function sendJSON(res: Response, code: number, data: any) {
-  res.status(code).json({ code: code, data: data });
+  try {
+    res.status(code).json({ code: code, data: data });
+  } catch (error) {
+    res.status(500).json({ code: 500, data: 'Internal server error: ' + error });
+  }
 }
 
 export function hashKey(data: PR | Sheet) {

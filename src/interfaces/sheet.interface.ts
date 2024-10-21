@@ -1,6 +1,6 @@
 export interface SheetSimple {
     prId: string;
-    finished: boolean;
+    status: string;
 }
 
 export interface Sheet {

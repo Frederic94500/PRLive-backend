@@ -7,6 +7,7 @@ import { PR } from '@/interfaces/pr.interface';
 import { PRModel } from '@/models/pr.model';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
+import { SheetStatus } from '@/enums/sheetStatus.enum';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import discordBot from '@services/discord.service';
@@ -15,20 +16,26 @@ import { hashKey } from '@/utils/toolbox';
 @Service()
 export class SheetService {
   public async gets(userId: string): Promise<SheetSimple[]> {
-    const sheet: Sheet[] = await SheetModel.find({ voterId: userId });
+    const pr: PR[] = await PRModel.find();
+    const sheets: Sheet[] = await SheetModel.find({ voterId: userId });
 
-    return await Promise.all(
-      sheet.map(async sheet => {
-        const pr = await PRModel.findById(sheet.prId);
-
-        const ranks = sheet.sheet.map(sheetSong => sheetSong.rank);
-        const uniqueRanks = new Set(ranks);
-        return {
-          prId: sheet.prId,
-          finished: sheet.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe && uniqueRanks.size === ranks.length,
-        };
-      }),
-    );
+    return pr.map(pr => {
+      let ranks = null;
+      let uniqueRanks = null;
+      const sheetUser = sheets.find(sheet => sheet.prId === String(pr._id));
+      if (sheetUser) {
+        ranks = sheetUser.sheet.map(sheetSong => sheetSong.rank);
+        uniqueRanks = new Set(ranks);
+      }
+      return {
+        prId: pr._id,
+        status: sheetUser
+          ? sheetUser.sheet.reduce((acc, sheetSong) => acc + sheetSong.rank, 0) === pr.mustBe && uniqueRanks.size === ranks.length
+            ? SheetStatus.FILLED
+            : SheetStatus.UNFILLED
+          : SheetStatus.NOTJOINED,
+      };
+    });
   }
 
   public async getId(prId: string, userId: string): Promise<Sheet> {
@@ -130,13 +137,13 @@ export class SheetService {
     if (!sheet) {
       throw new HttpException(404, 'Sheet not found');
     }
-    
+
     await SheetModel.findOneAndDelete({ prId: prId, voterId: voterId });
 
     try {
       const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
       const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as ThreadChannel;
-      
+
       discordChannelLog.send(`Sheet deleted for <@${voterId}> in PR: ${pr.name}`);
       discordChannelThread.members.remove(voterId);
     } catch (error) {
