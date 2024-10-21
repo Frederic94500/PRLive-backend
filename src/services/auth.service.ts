@@ -3,6 +3,7 @@ import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
 import { HttpException } from '@/exceptions/httpException';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Readable } from 'stream';
+import { Role } from '@/enums/role.enum';
 import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { User } from '@/interfaces/user.interface';
@@ -60,7 +61,7 @@ export class AuthService {
         username: reqUser.username,
         name: reqUser.username.charAt(0).toUpperCase() + reqUser.username.slice(1),
         image: image,
-        role: 'user',
+        role: Role.USER,
         server: Server.EU,
       };
       
