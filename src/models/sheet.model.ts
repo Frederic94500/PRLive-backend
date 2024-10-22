@@ -42,6 +42,14 @@ const SheetSchema = new Schema({
           type: Number,
           required: false,
         },
+        comment: {
+          type: String,
+          required: false,
+          validate: {
+            validator: (v: string) => v.length <= 128,
+            message: 'Comment is too long',
+          },
+        }
       },
     ],
     required: true,

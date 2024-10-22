@@ -74,6 +74,7 @@ export class SheetService {
           orderId: song.orderId,
           rank: null,
           score: null,
+          comment: null,
         };
       }),
     };

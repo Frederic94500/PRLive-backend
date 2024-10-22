@@ -18,4 +18,5 @@ export interface SheetSong {
     orderId: number;
     rank: number;
     score: number;
+    comment?: string;
 }
