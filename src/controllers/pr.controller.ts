@@ -1,4 +1,4 @@
-import { PR, PROutput } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PROutput } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
 import { Song, TiebreakWinner } from '@/interfaces/song.interface';
 
@@ -55,6 +55,19 @@ export class PRController {
     }
   }
 
+  public uploadFilePR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const type = req.body.type;
+      const file = req.file;
+      await this.prService.uploadFilePR(prId, type, file);
+
+      sendJSON(res, 200, 'File uploaded');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public updatePR = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.id;
@@ -77,6 +90,21 @@ export class PRController {
       sendJSON(res, error.status, error.message);
     }
   };
+
+  public finished = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      let discordId: string = null;
+      if (req.user) {
+        discordId = req.user.id;
+      }
+      const pr: PRFinished = await this.prService.finished(prId, discordId);
+
+      sendJSON(res, 200, pr);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
 
   public getTie = async (req: Request, res: Response) => {
     try {

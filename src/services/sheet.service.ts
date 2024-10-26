@@ -60,8 +60,15 @@ export class SheetService {
       throw new HttpException(403, 'User is not in the server');
     }
 
-    const user: User = await UserModel.findOne({ discordId: userId });
     const pr: PR = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, 'PR not found');
+    }
+    if (pr.finished) {
+      throw new HttpException(400, 'PR is finished, no more joining');
+    }
+
+    const user: User = await UserModel.findOne({ discordId: userId });
     sheet = {
       prId: prId,
       voterId: userId,
@@ -74,7 +81,7 @@ export class SheetService {
           orderId: song.orderId,
           rank: null,
           score: null,
-          comment: null,
+          comment: '',
         };
       }),
     };
@@ -125,12 +132,12 @@ export class SheetService {
     return sheet;
   }
 
-  public async deleteSheetUser(prId: string, voterId: string): Promise<void> {
+  public async deleteSheetUser(prId: string, voterId: string, creator: boolean = false): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, 'PR not found');
     }
-    if (pr.finished) {
+    if (pr.finished && !creator) {
       throw new HttpException(400, 'PR is finished, no more deleting');
     }
 

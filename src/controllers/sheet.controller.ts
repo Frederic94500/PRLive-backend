@@ -72,7 +72,7 @@ export class SheetController {
     try {
       const prId: string = req.params.prId;
       const voterId: string = req.params.voterId;
-      await this.sheetService.deleteSheetUser(prId, voterId);
+      await this.sheetService.deleteSheetUser(prId, voterId, true);
 
       sendJSON(res, 200, 'Deleted');
     } catch (error) {

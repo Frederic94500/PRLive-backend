@@ -47,6 +47,18 @@ const PRSchema = new Schema({
     type: String,
     required: true,
   },
+  video: {
+    type: String,
+    required: false,
+  },
+  affinityImage: {
+    type: String,
+    required: false,
+  },
+  prStats: {
+    type: String,
+    required: false,
+  },
   songList: {
     type: [
       {

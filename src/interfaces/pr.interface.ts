@@ -15,6 +15,9 @@ export interface PR {
   numberSongs: number;
   mustBe: number;
   threadId: string;
+  video?: string;
+  affinityImage?: string;
+  prStats?: string;
   songList: any[];
 }
 
@@ -32,11 +35,25 @@ export interface PROutput {
   blind: boolean;
   deadlineNomination?: string;
   deadline: string;
+  finished: boolean;
   numberVoters: number;
   numberSongs: number;
   mustBe: number;
   threadId: string;
+  video?: string;
+  affinityImage?: string;
+  prStats?: string;
   tie: Tie;
   songList: SongOutput[];
   voters: UserOutput[];
+}
+
+export interface PRFinished {
+  _id: string;
+  name: string;
+  video?: string;
+  affinityImage?: string;
+  prStats?: string;
+  hasSheet: boolean;
+  resultTable: SongOutput[];
 }

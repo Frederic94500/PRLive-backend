@@ -12,6 +12,14 @@ export const checkAuth = async (req: Request, res: Response, next: NextFunction)
   }
 };
 
+export const checkAuthNonMandatory = async (req: Request, res: Response, next: NextFunction) => {
+  if (req.isAuthenticated()) {
+    return next();
+  } else {
+    return next();
+  }
+}
+
 export const checkAdmin = async (req: Request & { user: { id: string } }, res: Response, next: NextFunction) => {
   if (req.isAuthenticated()) {
     const user = await UserModel.findOne({ discordId: req.user.id });

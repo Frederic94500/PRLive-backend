@@ -1,10 +1,12 @@
+import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
-import { PR, PROutput, Tie } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PROutput, Tie } from '@/interfaces/pr.interface';
 
+import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
@@ -12,6 +14,7 @@ import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import discordBot from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
+import s3Client from './aws.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Service()
@@ -71,6 +74,9 @@ export class PRService {
     prData.hashKey = hashKey(prData);
     prData.numberSongs = prData.songList.length;
     prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
+    prData.video = null;
+    prData.affinityImage = null;
+    prData.prStats = null;
     console.log('haskeyed');
 
     try {
@@ -175,6 +181,39 @@ export class PRService {
     });
   }
 
+  public async uploadFilePR(prId: string, type: string, file: Express.Multer.File): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    file.filename = `${uuidv4()}.${file.mimetype.split('/')[1]}`;
+    const link = `PR/${pr._id}/${file.filename}`;
+    const url = `${AWS_S3_STATIC_PAGE_URL}/${link}`;
+
+    if (type === FileType.VIDEO) {
+      pr.video = url;
+    } else if (type === FileType.AFFINITY_IMAGE) {
+      pr.affinityImage = url;
+    } else {
+      throw new HttpException(400, `Invalid type`);
+    }
+
+    const params = {
+      Bucket: AWS_S3_BUCKET_NAME,
+      Key: link,
+      Body: file.buffer,
+      ContentType: file.mimetype,
+    };
+
+    try {
+      await s3Client.send(new PutObjectCommand(params));
+      await pr.save();
+    } catch (error) {
+      throw new HttpException(500, 'File upload failed');
+    }
+  }
+
   public async updatePR(prId: string, prData: PR): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
@@ -189,6 +228,9 @@ export class PRService {
     pr.deadline = prData.deadline;
     pr.finished = prData.finished;
     pr.songList = prData.songList;
+    pr.video = prData.video;
+    pr.affinityImage = prData.affinityImage;
+    pr.prStats = prData.prStats;
     await pr.save();
   }
 
@@ -259,10 +301,14 @@ export class PRService {
       blind: pr.blind,
       deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
+      finished: pr.finished,
       numberVoters: sheets.length || 0,
       numberSongs: pr.songList.length,
       mustBe: pr.mustBe,
       threadId: pr.threadId,
+      video: pr.video,
+      affinityImage: pr.affinityImage,
+      prStats: pr.prStats,
       tie: null,
       songList: pr.songList
         .map(song => {
@@ -338,6 +384,47 @@ export class PRService {
     prOutput.tie = this.checkTie(prOutput);
 
     return prOutput;
+  }
+
+  public async finished(prId: string, discordId: string): Promise<PRFinished> {
+    const pr: PROutput = await this.output(prId);
+
+    let sheet = null;
+    if (discordId) {
+      sheet = await SheetModel.findOne({ prId, voterId: discordId });
+    }
+    
+    const prFinished: PRFinished = {
+      _id: pr._id,
+      name: pr.name,
+      video: pr.video,
+      affinityImage: pr.affinityImage,
+      prStats: pr.prStats,
+      hasSheet: sheet ? true : false,
+      resultTable: pr.songList
+        .map(song => {
+          return {
+            uuid: song.uuid,
+            orderId: song.orderId,
+            nominatedId: song.nominatedId,
+            artist: song.artist,
+            title: song.title,
+            anime: song.anime,
+            type: song.type,
+            startSample: song.startSample,
+            sampleLength: song.sampleLength,
+            urlVideo: song.urlVideo,
+            urlAudio: song.urlAudio,
+            totalRank: song.totalRank,
+            rankPosition: song.rankPosition,
+            tiebreak: song.tiebreak,
+            voters: song.voters,
+          };
+        })
+        .sort((a, b) => b.rankPosition - a.rankPosition),
+    };
+
+    return prFinished;
   }
 
   public async getTie(prId: string): Promise<Tie> {
