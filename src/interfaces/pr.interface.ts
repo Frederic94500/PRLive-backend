@@ -1,14 +1,13 @@
 import { SongOutput, TiebreakSong as TieSong } from './song.interface';
 
+import { Nomination } from './nomination.interface';
 import { UserOutput } from './user.interface';
 
 export interface PR {
   _id?: string;
   name: string;
   creator: string;
-  nomination: boolean;
-  blind: boolean;
-  deadlineNomination?: string;
+  nomination: Nomination;
   deadline: string;
   finished: boolean;
   hashKey: string;
@@ -21,6 +20,15 @@ export interface PR {
   songList: any[];
 }
 
+export interface PRInput extends PR {
+  isNomination?: boolean;
+  hidden?: boolean;
+  blind?: boolean;
+  hideNominatedSongList?: boolean;
+  deadlineNomination?: string;
+  songPerUser?: number;
+}
+
 export interface Tie {
   prId: string;
   status: boolean;
@@ -31,9 +39,7 @@ export interface PROutput {
   _id: string;
   name: string;
   creator: string;
-  nomination: boolean;
-  blind: boolean;
-  deadlineNomination?: string;
+  nomination: Nomination;
   deadline: string;
   finished: boolean;
   numberVoters: number;

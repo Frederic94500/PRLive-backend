@@ -1,7 +1,7 @@
 import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
-import { PR, PRFinished, PROutput, Tie } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PRInput, PROutput, Tie } from '@/interfaces/pr.interface';
 
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
@@ -47,11 +47,37 @@ export class PRService {
     });
   }
 
-  public async createPR(prData: PR, creatorId: string): Promise<void> {
+  private async createDiscordThread(prData: PRInput, creatorId: string): Promise<string> {
+    try {
+      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
+      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
+
+      if (discordChannelThreads) {
+        const thread = await discordChannelThreads.threads.create({
+          name: prData.name,
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+          type: ChannelType.PrivateThread,
+          reason: `${prData.name} for <@${creatorId}>`,
+        });
+        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
+
+        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+        discordChannelLog.send(
+          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
+        );
+
+        return thread.id;
+      }
+    } catch (err) {
+      console.log(`Error Discord: ${err}`);
+    }
+  }
+
+  public async createPR(prData: PRInput, creatorId: string): Promise<void> {
     console.log('creating');
 
     try {
-      if (prData.songList.length !== 0) {
+      if (prData.songList) {
         if ('animeJPName' in prData.songList[0]) {
           console.log('ani');
           prData.songList = this.parseAnisongDb(prData.songList);
@@ -68,43 +94,33 @@ export class PRService {
 
     console.log('parsed');
 
-    prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : null;
     prData.finished = false;
     prData.creator = creatorId;
-    prData.hashKey = hashKey(prData);
     prData.numberSongs = prData.songList.length;
     prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
     prData.video = null;
     prData.affinityImage = null;
     prData.prStats = null;
+
+    prData.hashKey = hashKey(prData);
     console.log('haskeyed');
 
-    try {
-      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
-      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
-
-      if (discordChannelThreads) {
-        const thread = await discordChannelThreads.threads.create({
-          name: prData.name,
-          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-          type: ChannelType.PrivateThread,
-          reason: `${prData.name} for <@${creatorId}>`,
-        });
-        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
-        prData.threadId = thread.id;
-
-        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-        discordChannelLog.send(
-          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
-        );
-      }
-    } catch (err) {
-      console.log(`Error Discord: ${err}`);
-    }
+    prData.nomination = prData.isNomination ? {
+      prId: "",
+      hidden: prData.hidden,
+      blind: prData.blind,
+      hideNominatedSongList: prData.hideNominatedSongList,
+      deadlineNomination: prData.deadlineNomination,
+      endNomination: false,
+      songPerUser: prData.songPerUser,
+      nominatedSongList: [],
+    } : null;
 
     try {
-      await PRModel.create(prData);
-      console.log('created');
+      const pr = await PRModel.create(prData);
+      pr.nomination.prId = pr._id;
+      pr.threadId = await this.createDiscordThread(prData, creatorId);
+      await pr.save();
     } catch (err) {
       new HttpException(400, `Error creating PR: ${err}`);
     }
@@ -125,14 +141,19 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
-    const sheets = await SheetModel.find({ prId });
-
     songData.uuid = uuidv4();
     songData.orderId = pr.songList.length;
+    songData.tiebreak = 0;
+
+    const sheets = await SheetModel.find({ prId });
     sheets.forEach(sheet => {
-      sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null });
+      sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null, comment: "" });
       sheet.save();
     });
+
+    if (pr.nomination) {
+      pr.nomination.nominatedSongList.push({ uuid: songData.uuid, nominatedId: songData.nominatedId, at: new Date().toISOString() });
+    }
 
     pr.songList.push(songData);
     pr.hashKey = hashKey(pr);
@@ -154,6 +175,13 @@ export class PRService {
       sheet.sheet.forEach((song, index) => (song.orderId = index));
       sheet.save();
     });
+
+    if (pr.nomination) {
+      const index = pr.nomination.nominatedSongList.findIndex(nominated => nominated.uuid === songUuid);
+      if (index !== -1) {
+        pr.nomination.nominatedSongList.splice(index, 1);
+      }
+    }
 
     const index = pr.songList.findIndex(song => song.uuid === songUuid);
     pr.songList.splice(index, 1);
@@ -223,8 +251,6 @@ export class PRService {
 
     pr.name = prData.name;
     pr.nomination = prData.nomination;
-    pr.blind = prData.blind;
-    pr.deadlineNomination = prData.deadlineNomination;
     pr.deadline = prData.deadline;
     pr.finished = prData.finished;
     pr.songList = prData.songList;
@@ -298,8 +324,6 @@ export class PRService {
       name: pr.name,
       creator: pr.creator,
       nomination: pr.nomination,
-      blind: pr.blind,
-      deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
       finished: pr.finished,
       numberVoters: sheets.length || 0,

@@ -10,11 +10,7 @@ export class CreatePRDto {
 
   @IsBoolean()
   @IsNotEmpty()
-  public nomination: boolean;
-
-  @IsBoolean()
-  @IsNotEmpty()
-  public blind: boolean;
+  public isNomination: boolean;
 
   @IsISO8601({ strict: true })
   @IsNotEmpty()
