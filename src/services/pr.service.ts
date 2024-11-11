@@ -6,6 +6,7 @@ import { PR, PRFinished, PRInput, PROutput, Tie } from '@/interfaces/pr.interfac
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
+import { PRStatus } from '@/enums/prStatus.enum';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
@@ -69,7 +70,10 @@ export class PRService {
         return thread.id;
       }
     } catch (err) {
-      console.log(`Error Discord: ${err}`);
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `Error during creating PR for: ${prData.name}\nError: ${err}`,
+      );
     }
   }
 
@@ -101,6 +105,7 @@ export class PRService {
     prData.video = null;
     prData.affinityImage = null;
     prData.prStats = null;
+    prData.status = prData.isNomination ? PRStatus.NOMINATION : PRStatus.RANKING;
 
     prData.hashKey = hashKey(prData);
     console.log('haskeyed');
@@ -118,7 +123,9 @@ export class PRService {
 
     try {
       const pr = await PRModel.create(prData);
-      pr.nomination.prId = pr._id;
+      if (pr.nomination) {
+        pr.nomination.prId = pr._id;
+      }
       pr.threadId = await this.createDiscordThread(prData, creatorId);
       await pr.save();
     } catch (err) {
@@ -130,6 +137,28 @@ export class PRService {
     const pr: PR = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    if (pr.nomination) {
+      pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.map(nominated => {
+        const { uuid, nominatedId, at } = nominated;
+        return { uuid, nominatedId: pr.nomination.hidden ? undefined : nominatedId, at };
+      });
+
+      pr.songList = pr.songList.map(song => {
+        const { uuid, orderId, nominatedId, artist, title, anime, type, urlVideo, urlAudio } = song;
+        return {
+          uuid,
+          orderId,
+          nominatedId: pr.nomination.hidden ? "" : nominatedId,
+          artist: pr.nomination.blind ? "" : artist,
+          title: pr.nomination.blind ? "" : title,
+          anime: pr.nomination.blind ? "" : anime,
+          type: pr.nomination.blind ? "" : type,
+          urlVideo: pr.nomination.blind ? "" : urlVideo,
+          urlAudio,
+        };
+      })
     }
 
     return pr;
@@ -242,6 +271,15 @@ export class PRService {
     }
   }
 
+  public async getUpdatePR(prId: string): Promise<PR> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    return pr;
+  }
+
   public async updatePR(prId: string, prData: PR): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
@@ -257,6 +295,11 @@ export class PRService {
     pr.video = prData.video;
     pr.affinityImage = prData.affinityImage;
     pr.prStats = prData.prStats;
+    if (prData.finished) {
+      pr.status = PRStatus.FINISHED;
+    } else {
+      pr.status = PRStatus.RANKING;
+    }
     await pr.save();
   }
 
@@ -323,6 +366,7 @@ export class PRService {
       _id: pr._id,
       name: pr.name,
       creator: pr.creator,
+      status: pr.status,
       nomination: pr.nomination,
       deadline: pr.deadline,
       finished: pr.finished,
@@ -494,12 +538,17 @@ export class PRService {
 
     try {
       const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
-      if (!discordChannelThread) {
-        return;
-      }
       discordChannelThread.delete();
+
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `PR deleted: ${pr.name}`,
+      );
     } catch (err) {
-      console.log(`Error Discord: ${err}`);
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `Error during delete PR for: ${pr.name}\nError: ${err}`,
+      );
     }
   }
 
@@ -512,7 +561,7 @@ export class PRService {
     const users: User[] = await UserModel.find();
     const prs: PR[] = await PRModel.find(
       {},
-      { _id: 1, name: 1, creator: 1, nomination: 1, blind: 1, deadlineNomination: 1, deadline: 1, finished: 1, numberSongs: 1 },
+      { _id: 1, name: 1, creator: 1, status: 1, nomination: { deadlineNomination: 1, hidden: 1, blind: 1, hideNominatedSongList: 1 }, deadline: 1, finished: 1, numberSongs: 1 },
     );
 
     prs.forEach(pr => {

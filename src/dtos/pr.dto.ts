@@ -129,14 +129,6 @@ export class UpdatePRDto {
   @IsString()
   @IsNotEmpty()
   public creator: string;
-
-  @IsBoolean()
-  @IsNotEmpty()
-  public nomination: boolean;
-
-  @IsBoolean()
-  @IsNotEmpty()
-  public blind: boolean;
   
   @IsISO8601({ strict: true })
   @IsNotEmpty()

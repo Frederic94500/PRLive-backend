@@ -32,4 +32,15 @@ export class NominationController {
       sendJSON(res, error.status, error.message);
     }
   }
+
+  public endNomination = async (req: Request, res: Response) => {
+    try {
+      const prId = req.params.prId;
+      await this.nominationService.endNomination(prId);
+      
+      sendJSON(res, 200, 'Nomination ended');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
 }

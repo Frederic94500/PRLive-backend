@@ -1,12 +1,14 @@
 import { SongOutput, TiebreakSong as TieSong } from './song.interface';
 
 import { Nomination } from './nomination.interface';
+import { PRStatus } from '@/enums/prStatus.enum';
 import { UserOutput } from './user.interface';
 
 export interface PR {
   _id?: string;
   name: string;
   creator: string;
+  status: PRStatus;
   nomination: Nomination;
   deadline: string;
   finished: boolean;
@@ -39,6 +41,7 @@ export interface PROutput {
   _id: string;
   name: string;
   creator: string;
+  status: PRStatus;
   nomination: Nomination;
   deadline: string;
   finished: boolean;

@@ -19,6 +19,7 @@ export interface Nomination {
 export interface NominationData {
   _id: string;
   prId: string;
+  name: string;
   hidden: boolean;
   blind: boolean;
   hideNominatedSongList: boolean;
@@ -26,5 +27,7 @@ export interface NominationData {
   endNomination: boolean;
   songPerUser: number;
   remainingNominations: number;
+  numberSongs: number;
   songList: any[];
+  nominators: {nominator: string, name: string}[];
 }

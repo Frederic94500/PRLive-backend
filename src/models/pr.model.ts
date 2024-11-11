@@ -12,6 +12,10 @@ const PRSchema = new Schema({
     type: String,
     required: true,
   },
+  status: {
+    type: String,
+    required: true,
+  },
   nomination: {
     type: NominationModel.schema,
     required: false,
