@@ -238,6 +238,10 @@ export class PRService {
         throw new HttpException(400, `Song list doesn't match (orderId)`);
       }
     });
+
+    if (prDB.hashKey !== hashKey(prData)) {
+      throw new HttpException(400, `PR data doesn't match (hashKey)`);
+    }
   }
 
   public async uploadFilePR(prId: string, type: string, file: Express.Multer.File): Promise<void> {
