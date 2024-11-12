@@ -139,6 +139,8 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
+    pr.creator = (await UserModel.findOne({ discordId: pr.creator })).name;
+
     if (pr.nomination) {
       pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.map(nominated => {
         const { uuid, nominatedId, at } = nominated;
@@ -277,6 +279,8 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
+    pr.creator = (await UserModel.findOne({ discordId: pr.creator })).name;
+
     return pr;
   }
 
@@ -365,7 +369,7 @@ export class PRService {
     const prOutput: PROutput = {
       _id: pr._id,
       name: pr.name,
-      creator: pr.creator,
+      creator: users.find(user => user.discordId === pr.creator).name,
       status: pr.status,
       nomination: pr.nomination,
       deadline: pr.deadline,
@@ -383,7 +387,7 @@ export class PRService {
           return {
             uuid: song.uuid,
             orderId: song.orderId,
-            nominatedId: song.nominatedId,
+            nominatedId: song.nominatedId ? users.find(voter => voter.discordId === song.nominatedId).name : null,
             artist: song.artist,
             title: song.title,
             anime: song.anime,
