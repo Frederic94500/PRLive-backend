@@ -25,7 +25,7 @@ export class PRService {
       return {
         uuid: uuidv4(),
         orderId: index,
-        nominatedId: null,
+        nominator: null,
         artist: song.songArtist,
         title: song.songName,
         anime: song.animeJPName,
@@ -143,16 +143,16 @@ export class PRService {
 
     if (pr.nomination) {
       pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.map(nominated => {
-        const { uuid, nominatedId, at } = nominated;
-        return { uuid, nominatedId: pr.nomination.hidden ? undefined : nominatedId, at };
+        const { uuid, nominator, at } = nominated;
+        return { uuid, nominator: pr.nomination.hidden ? undefined : nominator, at };
       });
 
       pr.songList = pr.songList.map(song => {
-        const { uuid, orderId, nominatedId, artist, title, anime, type, urlVideo, urlAudio } = song;
+        const { uuid, orderId, nominator, artist, title, anime, type, urlVideo, urlAudio } = song;
         return {
           uuid,
           orderId,
-          nominatedId: pr.nomination.hidden ? "" : nominatedId,
+          nominator: pr.nomination.hidden ? "" : nominator,
           artist: pr.nomination.blind ? "" : artist,
           title: pr.nomination.blind ? "" : title,
           anime: pr.nomination.blind ? "" : anime,
@@ -183,7 +183,7 @@ export class PRService {
     });
 
     if (pr.nomination) {
-      pr.nomination.nominatedSongList.push({ uuid: songData.uuid, nominatedId: songData.nominatedId, at: new Date().toISOString() });
+      pr.nomination.nominatedSongList.push({ uuid: songData.uuid, nominator: songData.nominator, at: new Date().toISOString() });
     }
 
     pr.songList.push(songData);
@@ -391,7 +391,7 @@ export class PRService {
           return {
             uuid: song.uuid,
             orderId: song.orderId,
-            nominatedId: song.nominatedId ? users.find(voter => voter.discordId === song.nominatedId).name : null,
+            nominator: song.nominator ? users.find(voter => voter.discordId === song.nominator).name : null,
             artist: song.artist,
             title: song.title,
             anime: song.anime,
@@ -482,7 +482,7 @@ export class PRService {
           return {
             uuid: song.uuid,
             orderId: song.orderId,
-            nominatedId: song.nominatedId,
+            nominator: song.nominator,
             artist: song.artist,
             title: song.title,
             anime: song.anime,

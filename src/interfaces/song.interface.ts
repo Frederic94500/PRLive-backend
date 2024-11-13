@@ -55,7 +55,7 @@ export interface AnisongDb {
 export interface Song {
   uuid: string;
   orderId: number;
-  nominatedId?: string;
+  nominator?: string;
   artist: string;
   title: string;
   anime?: string;
@@ -70,7 +70,7 @@ export interface Song {
 export interface SongOutput {
   uuid: string;
   orderId: number;
-  nominatedId?: string;
+  nominator?: string;
   artist: string;
   title: string;
   anime?: string;

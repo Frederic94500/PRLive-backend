@@ -68,7 +68,7 @@ const PRSchema = new Schema({
           type: Number,
           required: true,
         },
-        nominatedId: {
+        nominator: {
           type: String,
           required: false,
         },

@@ -1,6 +1,6 @@
 export interface NominatedSongs {
   uuid: string;
-  nominatedId: string;
+  nominator: string;
   at: string;
 }
 

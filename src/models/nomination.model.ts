@@ -38,7 +38,7 @@ const NominationSchema = new Schema({
           type: String,
           required: true,
         },
-        nominatedId: {
+        nominator: {
           type: String,
           required: true,
         },

@@ -22,19 +22,19 @@ export class NominationService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
-    const usersList = [...new Set(pr.nomination.nominatedSongList.map(nominated => nominated.nominatedId))];
+    const usersList = [...new Set(pr.nomination.nominatedSongList.map(nominated => nominated.nominator))];
     const users = await UserModel.find({ discordId: { $in: usersList } });
 
     const remainingNominations =
-      pr.nomination.songPerUser - pr.nomination.nominatedSongList.filter(nominated => nominated.nominatedId === userId).length;
+      pr.nomination.songPerUser - pr.nomination.nominatedSongList.filter(nominated => nominated.nominator === userId).length;
     const songList =
       pr.songList && !pr.nomination.hideNominatedSongList
         ? pr.songList.map(song => {
-            const { uuid, orderId, nominatedId, artist, title, anime, type, urlVideo, urlAudio } = song;
+            const { uuid, orderId, nominator, artist, title, anime, type, urlVideo, urlAudio } = song;
             return {
               uuid,
               orderId,
-              nominatedId: pr.nomination.hidden ? undefined : nominatedId,
+              nominator: pr.nomination.hidden ? undefined : nominator,
               artist: pr.nomination.blind ? undefined : artist,
               title: pr.nomination.blind ? undefined : title,
               anime: pr.nomination.blind ? undefined : anime,
@@ -78,11 +78,11 @@ export class NominationService {
     if (pr.nomination.endNomination) {
       throw new HttpException(400, `Nomination is closed`);
     }
-    if (pr.nomination.songPerUser <= pr.nomination.nominatedSongList.filter(nominated => nominated.nominatedId === userId).length) {
+    if (pr.nomination.songPerUser <= pr.nomination.nominatedSongList.filter(nominated => nominated.nominator === userId).length) {
       throw new HttpException(400, `You have already nominated the maximum number of songs`);
     }
 
-    songData.nominatedId = userId;
+    songData.nominator = userId;
 
     this.prService.addSongPR(prId, songData);
   }
@@ -110,7 +110,7 @@ export class NominationService {
 
     await pr.save();
 
-    const usersList = [...new Set(pr.nomination.nominatedSongList.map(nominated => nominated.nominatedId))];
+    const usersList = [...new Set(pr.nomination.nominatedSongList.map(nominated => nominated.nominator))];
     const users = await UserModel.find({ discordId: { $in: usersList } });
 
     users.forEach(async user => {
