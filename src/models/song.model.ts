@@ -12,7 +12,7 @@ const SongSchema: Schema = new Schema({
     type: Number,
     required: true,
   },
-  nominatedId: {
+  nominator: {
     type: String,
     required: false,
   },
@@ -24,7 +24,7 @@ const SongSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  anime: {
+  source: {
     type: String,
     required: false,
   },

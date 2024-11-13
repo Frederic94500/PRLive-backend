@@ -1,11 +1,12 @@
 import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
-import { PR, PRFinished, PROutput, Tie } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PRInput, PROutput, Tie } from '@/interfaces/pr.interface';
 
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
+import { PRStatus } from '@/enums/prStatus.enum';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
@@ -24,10 +25,10 @@ export class PRService {
       return {
         uuid: uuidv4(),
         orderId: index,
-        nominatedId: null,
+        nominator: null,
         artist: song.songArtist,
         title: song.songName,
-        anime: song.animeJPName,
+        source: song.animeJPName,
         type: song.songType,
         startSample: 0,
         sampleLength: 30,
@@ -47,11 +48,40 @@ export class PRService {
     });
   }
 
-  public async createPR(prData: PR, creatorId: string): Promise<void> {
+  private async createDiscordThread(prData: PRInput, creatorId: string): Promise<string> {
+    try {
+      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
+      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
+
+      if (discordChannelThreads) {
+        const thread = await discordChannelThreads.threads.create({
+          name: prData.name,
+          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
+          type: ChannelType.PrivateThread,
+          reason: `${prData.name} for <@${creatorId}>`,
+        });
+        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
+
+        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+        discordChannelLog.send(
+          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
+        );
+
+        return thread.id;
+      }
+    } catch (err) {
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `Error during creating PR for: ${prData.name}\nError: ${err}`,
+      );
+    }
+  }
+
+  public async createPR(prData: PRInput, creatorId: string): Promise<void> {
     console.log('creating');
 
     try {
-      if (prData.songList.length !== 0) {
+      if (prData.songList) {
         if ('animeJPName' in prData.songList[0]) {
           console.log('ani');
           prData.songList = this.parseAnisongDb(prData.songList);
@@ -68,43 +98,36 @@ export class PRService {
 
     console.log('parsed');
 
-    prData.deadlineNomination = prData.nomination ? prData.deadlineNomination : null;
     prData.finished = false;
     prData.creator = creatorId;
-    prData.hashKey = hashKey(prData);
     prData.numberSongs = prData.songList.length;
     prData.mustBe = (prData.numberSongs * (prData.numberSongs + 1)) / 2;
     prData.video = null;
     prData.affinityImage = null;
     prData.prStats = null;
+    prData.status = prData.isNomination ? PRStatus.NOMINATION : PRStatus.RANKING;
+
+    prData.hashKey = hashKey(prData);
     console.log('haskeyed');
 
+    prData.nomination = prData.isNomination ? {
+      prId: "",
+      hidden: prData.hidden,
+      blind: prData.blind,
+      hideNominatedSongList: prData.hideNominatedSongList,
+      deadlineNomination: prData.deadlineNomination,
+      endNomination: false,
+      songPerUser: prData.songPerUser,
+      nominatedSongList: [],
+    } : null;
+
     try {
-      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
-      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
-
-      if (discordChannelThreads) {
-        const thread = await discordChannelThreads.threads.create({
-          name: prData.name,
-          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-          type: ChannelType.PrivateThread,
-          reason: `${prData.name} for <@${creatorId}>`,
-        });
-        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
-        prData.threadId = thread.id;
-
-        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-        discordChannelLog.send(
-          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
-        );
+      const pr = await PRModel.create(prData);
+      if (pr.nomination) {
+        pr.nomination.prId = pr._id;
       }
-    } catch (err) {
-      console.log(`Error Discord: ${err}`);
-    }
-
-    try {
-      await PRModel.create(prData);
-      console.log('created');
+      pr.threadId = await this.createDiscordThread(prData, creatorId);
+      await pr.save();
     } catch (err) {
       new HttpException(400, `Error creating PR: ${err}`);
     }
@@ -116,6 +139,30 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
+    pr.creator = (await UserModel.findOne({ discordId: pr.creator })).name;
+
+    if (pr.nomination) {
+      pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.map(nominated => {
+        const { uuid, nominator, at } = nominated;
+        return { uuid, nominator: pr.nomination.hidden ? undefined : nominator, at };
+      });
+
+      pr.songList = pr.songList.map(song => {
+        const { uuid, orderId, nominator, artist, title, source, type, urlVideo, urlAudio } = song;
+        return {
+          uuid,
+          orderId,
+          nominator: pr.nomination.hidden ? "" : nominator,
+          artist: pr.nomination.blind ? "" : artist,
+          title: pr.nomination.blind ? "" : title,
+          source: pr.nomination.blind ? "" : source,
+          type: pr.nomination.blind ? "" : type,
+          urlVideo: pr.nomination.blind ? "" : urlVideo,
+          urlAudio,
+        };
+      })
+    }
+
     return pr;
   }
 
@@ -125,14 +172,19 @@ export class PRService {
       throw new HttpException(404, `PR doesn't exist`);
     }
 
-    const sheets = await SheetModel.find({ prId });
-
     songData.uuid = uuidv4();
     songData.orderId = pr.songList.length;
+    songData.tiebreak = 0;
+
+    const sheets = await SheetModel.find({ prId });
     sheets.forEach(sheet => {
-      sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null });
+      sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null, comment: "" });
       sheet.save();
     });
+
+    if (pr.nomination) {
+      pr.nomination.nominatedSongList.push({ uuid: songData.uuid, nominator: songData.nominator, at: new Date().toISOString() });
+    }
 
     pr.songList.push(songData);
     pr.hashKey = hashKey(pr);
@@ -154,6 +206,13 @@ export class PRService {
       sheet.sheet.forEach((song, index) => (song.orderId = index));
       sheet.save();
     });
+
+    if (pr.nomination) {
+      const index = pr.nomination.nominatedSongList.findIndex(nominated => nominated.uuid === songUuid);
+      if (index !== -1) {
+        pr.nomination.nominatedSongList.splice(index, 1);
+      }
+    }
 
     const index = pr.songList.findIndex(song => song.uuid === songUuid);
     pr.songList.splice(index, 1);
@@ -179,6 +238,10 @@ export class PRService {
         throw new HttpException(400, `Song list doesn't match (orderId)`);
       }
     });
+
+    if (prDB.hashKey !== hashKey(prData)) {
+      throw new HttpException(400, `PR data doesn't match (hashKey)`);
+    }
   }
 
   public async uploadFilePR(prId: string, type: string, file: Express.Multer.File): Promise<void> {
@@ -214,6 +277,17 @@ export class PRService {
     }
   }
 
+  public async getUpdatePR(prId: string): Promise<PR> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    pr.creator = (await UserModel.findOne({ discordId: pr.creator })).name;
+
+    return pr;
+  }
+
   public async updatePR(prId: string, prData: PR): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
@@ -223,14 +297,17 @@ export class PRService {
 
     pr.name = prData.name;
     pr.nomination = prData.nomination;
-    pr.blind = prData.blind;
-    pr.deadlineNomination = prData.deadlineNomination;
     pr.deadline = prData.deadline;
     pr.finished = prData.finished;
     pr.songList = prData.songList;
     pr.video = prData.video;
     pr.affinityImage = prData.affinityImage;
     pr.prStats = prData.prStats;
+    if (prData.finished) {
+      pr.status = PRStatus.FINISHED;
+    } else {
+      pr.status = PRStatus.RANKING;
+    }
     await pr.save();
   }
 
@@ -296,10 +373,9 @@ export class PRService {
     const prOutput: PROutput = {
       _id: pr._id,
       name: pr.name,
-      creator: pr.creator,
+      creator: users.find(user => user.discordId === pr.creator).name,
+      status: pr.status,
       nomination: pr.nomination,
-      blind: pr.blind,
-      deadlineNomination: pr.deadlineNomination,
       deadline: pr.deadline,
       finished: pr.finished,
       numberVoters: sheets.length || 0,
@@ -315,10 +391,10 @@ export class PRService {
           return {
             uuid: song.uuid,
             orderId: song.orderId,
-            nominatedId: song.nominatedId,
+            nominator: song.nominator ? users.find(voter => voter.discordId === song.nominator).name : null,
             artist: song.artist,
             title: song.title,
-            anime: song.anime,
+            source: song.source,
             type: song.type,
             startSample: song.startSample,
             sampleLength: song.sampleLength,
@@ -406,10 +482,10 @@ export class PRService {
           return {
             uuid: song.uuid,
             orderId: song.orderId,
-            nominatedId: song.nominatedId,
+            nominator: song.nominator,
             artist: song.artist,
             title: song.title,
-            anime: song.anime,
+            source: song.source,
             type: song.type,
             startSample: song.startSample,
             sampleLength: song.sampleLength,
@@ -470,12 +546,17 @@ export class PRService {
 
     try {
       const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
-      if (!discordChannelThread) {
-        return;
-      }
       discordChannelThread.delete();
+
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `PR deleted: ${pr.name}`,
+      );
     } catch (err) {
-      console.log(`Error Discord: ${err}`);
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      discordChannelLog.send(
+        `Error during delete PR for: ${pr.name}\nError: ${err}`,
+      );
     }
   }
 
@@ -488,7 +569,7 @@ export class PRService {
     const users: User[] = await UserModel.find();
     const prs: PR[] = await PRModel.find(
       {},
-      { _id: 1, name: 1, creator: 1, nomination: 1, blind: 1, deadlineNomination: 1, deadline: 1, finished: 1, numberSongs: 1 },
+      { _id: 1, name: 1, creator: 1, status: 1, nomination: { deadlineNomination: 1, hidden: 1, blind: 1, hideNominatedSongList: 1 }, deadline: 1, finished: 1, numberSongs: 1 },
     );
 
     prs.forEach(pr => {

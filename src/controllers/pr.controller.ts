@@ -68,6 +68,17 @@ export class PRController {
     }
   }
 
+  public getUpdatePR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const pr: PR = await this.prService.getUpdatePR(prId);
+
+      sendJSON(res, 200, pr);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public updatePR = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.id;

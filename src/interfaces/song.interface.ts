@@ -55,10 +55,10 @@ export interface AnisongDb {
 export interface Song {
   uuid: string;
   orderId: number;
-  nominatedId?: string;
+  nominator?: string;
   artist: string;
   title: string;
-  anime?: string;
+  source?: string;
   type: string;
   startSample: number;
   sampleLength: number;
@@ -70,10 +70,10 @@ export interface Song {
 export interface SongOutput {
   uuid: string;
   orderId: number;
-  nominatedId?: string;
+  nominator?: string;
   artist: string;
   title: string;
-  anime?: string;
+  source?: string;
   type: string;
   startSample: number;
   sampleLength: number;

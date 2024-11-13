@@ -1,5 +1,6 @@
 import { Document, Schema, model } from 'mongoose';
 
+import { NominationModel } from './nomination.model';
 import { PR } from '@/interfaces/pr.interface';
 
 const PRSchema = new Schema({
@@ -11,16 +12,12 @@ const PRSchema = new Schema({
     type: String,
     required: true,
   },
+  status: {
+    type: String,
+    required: true,
+  },
   nomination: {
-    type: Boolean,
-    required: true,
-  },
-  blind: {
-    type: Boolean,
-    required: true,
-  },
-  deadlineNomination: {
-    type: Date,
+    type: NominationModel.schema,
     required: false,
   },
   deadline: {
@@ -45,7 +42,7 @@ const PRSchema = new Schema({
   },
   threadId: {
     type: String,
-    required: true,
+    required: false,
   },
   video: {
     type: String,
@@ -71,7 +68,7 @@ const PRSchema = new Schema({
           type: Number,
           required: true,
         },
-        nominatedId: {
+        nominator: {
           type: String,
           required: false,
         },
@@ -83,7 +80,7 @@ const PRSchema = new Schema({
           type: String,
           required: true,
         },
-        anime: {
+        source: {
           type: String,
           required: false,
         },
@@ -113,7 +110,7 @@ const PRSchema = new Schema({
         },
       },
     ],
-    required: true,
+    required: false,
   },
 });
 
