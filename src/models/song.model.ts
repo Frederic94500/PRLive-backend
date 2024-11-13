@@ -24,7 +24,7 @@ const SongSchema: Schema = new Schema({
     type: String,
     required: true,
   },
-  anime: {
+  source: {
     type: String,
     required: false,
   },

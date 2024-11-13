@@ -80,7 +80,7 @@ const PRSchema = new Schema({
           type: String,
           required: true,
         },
-        anime: {
+        source: {
           type: String,
           required: false,
         },

@@ -28,7 +28,7 @@ export class PRService {
         nominator: null,
         artist: song.songArtist,
         title: song.songName,
-        anime: song.animeJPName,
+        source: song.animeJPName,
         type: song.songType,
         startSample: 0,
         sampleLength: 30,
@@ -148,14 +148,14 @@ export class PRService {
       });
 
       pr.songList = pr.songList.map(song => {
-        const { uuid, orderId, nominator, artist, title, anime, type, urlVideo, urlAudio } = song;
+        const { uuid, orderId, nominator, artist, title, source, type, urlVideo, urlAudio } = song;
         return {
           uuid,
           orderId,
           nominator: pr.nomination.hidden ? "" : nominator,
           artist: pr.nomination.blind ? "" : artist,
           title: pr.nomination.blind ? "" : title,
-          anime: pr.nomination.blind ? "" : anime,
+          source: pr.nomination.blind ? "" : source,
           type: pr.nomination.blind ? "" : type,
           urlVideo: pr.nomination.blind ? "" : urlVideo,
           urlAudio,
@@ -394,7 +394,7 @@ export class PRService {
             nominator: song.nominator ? users.find(voter => voter.discordId === song.nominator).name : null,
             artist: song.artist,
             title: song.title,
-            anime: song.anime,
+            source: song.source,
             type: song.type,
             startSample: song.startSample,
             sampleLength: song.sampleLength,
@@ -485,7 +485,7 @@ export class PRService {
             nominator: song.nominator,
             artist: song.artist,
             title: song.title,
-            anime: song.anime,
+            source: song.source,
             type: song.type,
             startSample: song.startSample,
             sampleLength: song.sampleLength,

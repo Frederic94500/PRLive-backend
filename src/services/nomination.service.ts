@@ -30,14 +30,14 @@ export class NominationService {
     const songList =
       pr.songList && !pr.nomination.hideNominatedSongList
         ? pr.songList.map(song => {
-            const { uuid, orderId, nominator, artist, title, anime, type, urlVideo, urlAudio } = song;
+            const { uuid, orderId, nominator, artist, title, source, type, urlVideo, urlAudio } = song;
             return {
               uuid,
               orderId,
               nominator: pr.nomination.hidden ? undefined : nominator,
               artist: pr.nomination.blind ? undefined : artist,
               title: pr.nomination.blind ? undefined : title,
-              anime: pr.nomination.blind ? undefined : anime,
+              source: pr.nomination.blind ? undefined : source,
               type,
               urlVideo: pr.nomination.blind ? undefined : urlVideo,
               urlAudio: pr.nomination.blind ? undefined : urlAudio,
