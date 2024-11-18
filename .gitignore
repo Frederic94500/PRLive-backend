@@ -133,3 +133,7 @@ output.txt
 # tools
 */__pycache__/*
 */env/*
+
+*.png
+*.mp4
+*.txt

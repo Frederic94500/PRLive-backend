@@ -1,9 +1,10 @@
 import 'reflect-metadata';
 
-import { CREDENTIALS, LOG_FORMAT, NODE_ENV, ORIGIN, PORT } from '@config';
+import { CREDENTIALS, DB_DATABASE, DB_HOST, DB_PASSWORD, DB_USER, LOG_FORMAT, NODE_ENV, ORIGIN, PORT, SECRET_KEY } from '@config';
 import { logger, stream } from '@utils/logger';
 
 import { ErrorMiddleware } from '@middlewares/error.middleware';
+import MongoStore from 'connect-mongo';
 import { Routes } from '@interfaces/routes.interface';
 import Strategy from 'passport-discord';
 import compression from 'compression';
@@ -123,14 +124,29 @@ export class App {
   }
 
   private initializeSession() {
+    const ttl = 15 * 24 * 60 * 60 * 1000;
     this.app.use(
       session({
-        secret: process.env.SECRET_KEY,
+        secret: SECRET_KEY,
         resave: false,
         saveUninitialized: false,
+        store: MongoStore.create({
+          mongoUrl: `mongodb+srv://${DB_USER}:${DB_PASSWORD}@${DB_HOST}/${DB_DATABASE}?authSource=admin`,
+          ttl: ttl / 1000,
+          autoRemove: 'native',
+          touchAfter: 24 * 60 * 60,
+          mongoOptions: {
+            tls: true,
+          },
+          crypto: {
+            secret: SECRET_KEY
+          },
+        }),
         cookie: {
-          secure: this.env === 'production' ? true : false,
-          maxAge: 15 * 24 * 60 * 60 * 1000,
+          httpOnly: true,
+          sameSite: 'strict',
+          secure: this.env === 'production',
+          maxAge: ttl,
         },
       }),
     );
