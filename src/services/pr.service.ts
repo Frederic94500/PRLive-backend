@@ -1,7 +1,7 @@
 import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
-import { AnisongDb, Song, TiebreakWinner } from '@/interfaces/song.interface';
+import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
-import { PR, PRFinished, PRInput, PROutput, Tie } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
 
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
@@ -312,49 +312,52 @@ export class PRService {
   }
 
   private checkTie(pr: PROutput): Tie {
-    const tiebreak: Tie = {
+    const tie: Tie = {
       prId: pr._id,
+      name: pr.name,
       status: false,
-      tieSong: [],
+      tieSongs: [],
     };
 
     const totalRanks = pr.songList.map(song => song.totalRank);
     const duplicateRanks = totalRanks.filter((rank, index) => totalRanks.indexOf(rank) !== index);
     const tieSongs = pr.songList.filter(song => duplicateRanks.includes(song.totalRank));
 
-    if (tieSongs.length > 0) {
-      tiebreak.status = true;
-
-      const resolvedTiebreaks = tieSongs.filter(song => song.tiebreak !== 0);
-      const unresolvedTiebreaks = tieSongs.filter(song => song.tiebreak === 0);
-
-      if (resolvedTiebreaks.length > 0) {
-        resolvedTiebreaks.sort((a, b) => b.tiebreak - a.tiebreak);
-        tiebreak.tieSong.push(
-          ...resolvedTiebreaks.map(song => ({
-            uuid: song.uuid,
-            urlAudio: song.urlAudio,
-            totalRank: song.totalRank,
-          })),
-        );
+    const groupedTieSongs = tieSongs.reduce((acc, song) => {
+      const rankIndex = acc.findIndex(group => group[0]?.totalRank === song.totalRank);
+      if (rankIndex === -1) {
+        acc.push([song]);
+      } else {
+        acc[rankIndex].push(song);
       }
+      return acc;
+    }, [] as SongOutput[][]);
 
-      if (unresolvedTiebreaks.length > 0) {
-        tiebreak.tieSong.push(
-          ...unresolvedTiebreaks.map(song => ({
-            uuid: song.uuid,
-            urlAudio: song.urlAudio,
-            totalRank: song.totalRank,
-          })),
-        );
-      }
-
-      if (unresolvedTiebreaks.length === 0 && resolvedTiebreaks.length > 0) {
-        tiebreak.status = false;
+    for (let index = groupedTieSongs.length - 1; index >= 0; index--) {
+      const group = groupedTieSongs[index];
+      const groupTiebreak = group.map(song => song.tiebreak);
+      const uniqueTiebreak = new Set(groupTiebreak);
+    
+      if (group.length === uniqueTiebreak.size) {
+        groupedTieSongs.splice(index, 1);
       }
     }
+    
+    if (groupedTieSongs.length > 0) {
+      tie.status = true;
 
-    return tiebreak;
+      tie.tieSongs = groupedTieSongs.map(group => {
+        return group.map(song => {
+          return {
+            uuid: song.uuid,
+            urlAudio: song.urlAudio,
+            totalRank: song.totalRank,
+          };
+        })
+      });
+    }
+
+    return tie;
   }
 
   public async output(prId: string): Promise<PROutput> {
@@ -509,7 +512,7 @@ export class PRService {
     return pr.tie;
   }
 
-  public async tiebreak(prId: string, data: TiebreakWinner, discordId: string): Promise<void> {
+  public async tiebreak(prId: string, tiebreak: Tiebreak, discordId: string): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
@@ -525,11 +528,16 @@ export class PRService {
       throw new HttpException(400, `You already voted, you can't break the tie`);
     }
 
-    const songWinner = pr.songList.find(song => song.uuid === data.uuid);
-    const songsLosers = pr.songList.filter(song => song.totalRank === songWinner.totalRank && song.uuid !== songWinner.uuid);
+    tiebreak.tieSongs.forEach(tieSong => {
+      tieSong.forEach(song => {
+        if (!pr.songList.some(prSong => prSong.uuid === song.uuid)) {
+          throw new HttpException(400, `Song not found`);
+        }
 
-    songWinner.tiebreak += 1;
-    songsLosers.forEach(song => (song.tiebreak -= 1));
+        const prSong = pr.songList.find(prSong => prSong.uuid === song.uuid);
+        prSong.tiebreak = song.tiebreak;
+      });
+    });
 
     await pr.save();
   }

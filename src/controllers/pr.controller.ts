@@ -1,9 +1,9 @@
-import { PR, PRFinished, PROutput } from '@/interfaces/pr.interface';
+import { PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
-import { Song, TiebreakWinner } from '@/interfaces/song.interface';
 
 import { Container } from 'typedi';
 import { PRService } from '@/services/pr.service';
+import { Song } from '@/interfaces/song.interface';
 import { sendJSON } from '@/utils/toolbox';
 
 export class PRController {
@@ -132,9 +132,9 @@ export class PRController {
   public tiebreak = async (req: Request & { user: { id: string }}, res: Response) => {
     try {
       const prId: string = req.params.id;
+      const tiebreak: Tiebreak = req.body;
       const discordId: string = req.user.id;
-      const data: TiebreakWinner = req.body;
-      await this.prService.tiebreak(prId, data, discordId);
+      await this.prService.tiebreak(prId, tiebreak, discordId);
 
       sendJSON(res, 200, 'Tiebreaked');
     } catch (error) {

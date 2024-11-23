@@ -24,7 +24,7 @@ export class PRRoute implements Routes {
     this.router.post(`${this.path}/uploadfile/:id/`, checkCreator, rateLimiterFile, upload.single('file'), this.prController.uploadFilePR);
     this.router.get(`${this.path}/update/:id`, checkCreator, this.prController.getUpdatePR);
     this.router.put(`${this.path}/update/:id`, checkCreator, ValidationMiddleware(UpdatePRDto), this.prController.updatePR);
-    this.router.get(`${this.path}/tie/:id`, checkCreator, this.prController.getTie);
+    this.router.get(`${this.path}/tie/:id`, checkAuth, this.prController.getTie);
     this.router.put(`${this.path}/tiebreak/:id`, checkAuth, ValidationMiddleware(TiebreakDto), this.prController.tiebreak);
     this.router.get(`${this.path}/output/:id`, checkCreator, this.prController.output);
     this.router.get(`${this.path}/finished/:id`, checkAuthNonMandatory, this.prController.finished);

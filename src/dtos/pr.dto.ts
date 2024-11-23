@@ -156,12 +156,19 @@ export class UpdatePRDto {
   public songList: Song[];
 }
 
-export class TiebreakDto {
+export class TiebreakSongDto {
   @IsString()
   @IsNotEmpty()
-  public prId: string;
-
-  @IsUUID()
-  @IsNotEmpty()
   public uuid: string;
+
+  @IsNumber()
+  @IsNotEmpty()
+  public tiebreak: number;
+}
+
+export class TiebreakDto {
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => TiebreakSongDto)
+  public tieSongs: TiebreakSongDto[][];
 }

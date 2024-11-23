@@ -1,4 +1,4 @@
-import { SongOutput, TiebreakSong as TieSong } from './song.interface';
+import { SongOutput, TieSong } from './song.interface';
 
 import { Nomination } from './nomination.interface';
 import { PRStatus } from '@/enums/prStatus.enum';
@@ -33,8 +33,16 @@ export interface PRInput extends PR {
 
 export interface Tie {
   prId: string;
+  name: string;
   status: boolean;
-  tieSong: TieSong[];
+  tieSongs: TieSong[][];
+}
+
+export interface Tiebreak {
+  tieSongs: {
+    uuid: string;
+    tiebreak: number;
+  }[][];
 }
 
 export interface PROutput {

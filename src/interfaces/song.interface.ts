@@ -89,13 +89,8 @@ export interface SongOutput {
   }[];
 }
 
-export interface TiebreakSong {
+export interface TieSong {
   uuid: string;
   urlAudio: string;
   totalRank: number;
-}
-
-export interface TiebreakWinner {
-  prId: string;
-  uuid: string;
 }
