@@ -23,6 +23,7 @@ export class UserRoute implements Routes {
     this.router.get(`${this.path}/gets`, checkCreator, this.user.getUsers);
     this.router.put(`${this.path}/edit`, checkAuth, ValidationMiddleware(UserDto), this.user.editUser);
     this.router.post(`${this.path}/imageupload`, checkAuth, rateLimiterImage, upload.single('image'), this.user.imageUpload);
+    this.router.put(`${this.path}/imageupdate`, checkAuth, this.user.imageUpdate);
     this.router.put(`${this.path}/imageupdate/:id`, checkAdmin, this.user.imageUpdateAdmin);
     this.router.delete(`${this.path}/delete/:id`, checkAdmin, this.user.deleteUser);
   }

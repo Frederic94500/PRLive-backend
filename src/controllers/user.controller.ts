@@ -59,11 +59,21 @@ export class UserController {
       sendJSON(res, error.status, error.message);
     }
   }
+
+  public imageUpdate = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      await this.user.imageUpdate(req.user.id);
+
+      sendJSON(res, 200, 'Photo profile updated');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
   
   public imageUpdateAdmin = async (req: Request, res: Response) => {
     try {
       const userId: string = req.params.id;
-      await this.user.imageUpdateAdmin(userId);
+      await this.user.imageUpdate(userId);
 
       sendJSON(res, 200, 'Photo profile updated');
     } catch (error) {

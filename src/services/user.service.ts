@@ -66,7 +66,7 @@ export class UserService {
     }
   }
 
-  public async imageUpdateAdmin(discordId: string): Promise<void> {
+  public async imageUpdate(discordId: string): Promise<void> {
     const user = await UserModel.findOne({ discordId });
     if (!user) throw new HttpException(404, "User doesn't exist");
 
