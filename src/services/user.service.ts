@@ -1,8 +1,6 @@
-import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
 import { downloadFile, sendToS3 } from '@/utils/toolbox';
 
 import { HttpException } from '@exceptions/httpException';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
@@ -10,7 +8,6 @@ import { User } from '@interfaces/user.interface';
 import { User as UserDiscord } from 'discord.js';
 import { UserModel } from '@/models/user.model';
 import client from './discord.service';
-import s3Client from './aws.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Service()
@@ -50,20 +47,9 @@ export class UserService {
     }
 
     image.filename = `${uuidv4()}.${image.mimetype.split('/')[1]}`;
+    const key = `${userId}/${image.filename}`;
 
-    const params = {
-      Bucket: AWS_S3_BUCKET_NAME,
-      Key: `${userId}/${image.filename}`,
-      Body: image.buffer,
-      ContentType: image.mimetype,
-    };
-
-    try {
-      await s3Client.send(new PutObjectCommand(params));
-      return AWS_S3_STATIC_PAGE_URL + `/${userId}/${image.filename}`;
-    } catch (error) {
-      throw new HttpException(500, 'Image upload failed');
-    }
+    return sendToS3(key, image.mimetype, image.buffer);
   }
 
   public async imageUpdate(discordId: string): Promise<void> {
