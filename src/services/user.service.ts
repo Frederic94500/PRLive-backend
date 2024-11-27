@@ -1,4 +1,5 @@
 import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
+import { downloadFile, sendToS3 } from '@/utils/toolbox';
 
 import { HttpException } from '@exceptions/httpException';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
@@ -6,7 +7,9 @@ import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@interfaces/user.interface';
+import { User as UserDiscord } from 'discord.js';
 import { UserModel } from '@/models/user.model';
+import client from './discord.service';
 import s3Client from './aws.service';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -61,6 +64,25 @@ export class UserService {
     } catch (error) {
       throw new HttpException(500, 'Image upload failed');
     }
+  }
+
+  public async imageUpdateAdmin(discordId: string): Promise<void> {
+    const user = await UserModel.findOne({ discordId });
+    if (!user) throw new HttpException(404, "User doesn't exist");
+
+    let discordUser: UserDiscord;
+    try {
+      discordUser = await client.users.fetch(discordId);
+      if (!discordUser) throw new HttpException(404, 'Discord user not found');
+    } catch (error) {
+      throw new HttpException(500, 'Discord user fetch failed');
+    }
+
+    const imageUrl = discordUser.avatarURL({ extension: 'png' });
+    const imageBuffer = await downloadFile(imageUrl);
+    const filename = uuidv4() + '.png';
+    user.image = await sendToS3(`${discordId}/${filename}`, 'image/png', imageBuffer);
+    await user.save();
   }
 
   public async deleteUser(userId: string): Promise<void> {
