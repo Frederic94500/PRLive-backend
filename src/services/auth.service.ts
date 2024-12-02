@@ -1,16 +1,11 @@
-import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
+import { downloadFile, sendToS3 } from '@/utils/toolbox';
 
 import { HttpException } from '@/exceptions/httpException';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { Readable } from 'stream';
 import { Role } from '@/enums/role.enum';
 import { Server } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
-import fs from 'fs';
-import path from 'path';
-import s3Client from './aws.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Service()
@@ -19,33 +14,10 @@ export class AuthService {
     let image = `https://cdn.discordapp.com/avatars/${reqUser.id}/${reqUser.avatar}.png`;
     const response = await fetch(image);
     if (response.ok) {
+      const imageBuffer = await downloadFile(image);
       const filename = `${uuidv4()}.png`;
-      const filePath = path.join(__dirname, 'downloads', filename);
-
-      fs.mkdirSync(path.dirname(filePath), { recursive: true });
-
-      const writer = fs.createWriteStream(filePath);
-      Readable.fromWeb(response.body).pipe(writer);
-
-      await new Promise((resolve, reject) => {
-        writer.on('finish', resolve);
-        writer.on('error', reject);
-      });
-
-      const fileStream = fs.createReadStream(filePath);
-      const params = {
-        Bucket: AWS_S3_BUCKET_NAME,
-        Key: `${reqUser.id}/${filename}`,
-        Body: fileStream,
-        ContentType: 'image/png',
-      };
-      await s3Client.send(new PutObjectCommand(params));
-
-      fs.unlinkSync(filePath);
-      writer.close();
-      fileStream.close();
-
-      image = AWS_S3_STATIC_PAGE_URL + `/${reqUser.id}/${filename}`;
+      const key = `${reqUser.id}/${filename}`;
+      image = await sendToS3(key, 'image/png', imageBuffer);
     }
 
     return image;

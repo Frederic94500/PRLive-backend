@@ -70,7 +70,7 @@ export class UserService {
 
     const imageUrl = discordUser.avatarURL({ extension: 'png' });
     const imageBuffer = await downloadFile(imageUrl);
-    const filename = uuidv4() + '.png';
+    const filename = `${uuidv4()}.png`;
     user.image = await sendToS3(`${discordId}/${filename}`, 'image/png', imageBuffer);
     await user.save();
   }

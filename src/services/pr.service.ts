@@ -1,21 +1,19 @@
-import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
+import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
+import { hashKey, sendToS3 } from '@/utils/toolbox';
 
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
 import { PRStatus } from '@/enums/prStatus.enum';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import discordBot from '@services/discord.service';
-import { hashKey } from '@/utils/toolbox';
-import s3Client from './aws.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Service()
@@ -252,30 +250,17 @@ export class PRService {
     }
 
     file.filename = `${uuidv4()}.${file.mimetype.split('/')[1]}`;
-    const link = `PR/${pr._id}/${file.filename}`;
-    const url = `${AWS_S3_STATIC_PAGE_URL}/${link}`;
+    const key = `PR/${pr._id}/${file.filename}`;
 
     if (type === FileType.VIDEO) {
-      pr.video = url;
+      pr.video = await sendToS3(key, file.mimetype, file.buffer);
     } else if (type === FileType.AFFINITY_IMAGE) {
-      pr.affinityImage = url;
+      pr.affinityImage = await sendToS3(key, file.mimetype, file.buffer);
     } else {
       throw new HttpException(400, `Invalid type`);
     }
 
-    const params = {
-      Bucket: AWS_S3_BUCKET_NAME,
-      Key: link,
-      Body: file.buffer,
-      ContentType: file.mimetype,
-    };
-
-    try {
-      await s3Client.send(new PutObjectCommand(params));
-      await pr.save();
-    } catch (error) {
-      throw new HttpException(500, 'File upload failed');
-    }
+    await pr.save();
   }
 
   public async getUpdatePR(prId: string): Promise<PR> {
