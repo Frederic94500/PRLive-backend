@@ -24,10 +24,14 @@ export class UserService {
     return users;
   }
 
-  public async editUser(userData: User, userId: string): Promise<User> {
+  public async editUser(userData: User, userId: string, admin: boolean = false): Promise<User> {
+    const args: { name: string; image: string; server: Server; role?: string } = { name: userData.name, image: userData.image, server: userData.server || Server.EU }
+    if (admin) {
+      args.role = userData.role;
+    }
     const updateUserById: User = await UserModel.findOneAndUpdate(
       { discordId: userId },
-      { name: userData.name, image: userData.image, server: userData.server || Server.EU },
+      args,
       { new: true },
     );
     if (!updateUserById) throw new HttpException(404, "User doesn't exist");
@@ -72,7 +76,7 @@ export class UserService {
   }
 
   public async deleteUser(userId: string): Promise<void> {
-    const deleteUserById: User = await UserModel.findByIdAndDelete(userId);
+    const deleteUserById: User = await UserModel.findOneAndDelete({ discordId: userId });
     if (!deleteUserById) throw new HttpException(404, "User doesn't exist");
 
     await SheetModel.deleteMany({ voterId: userId });
