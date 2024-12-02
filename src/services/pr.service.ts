@@ -179,6 +179,7 @@ export class PRService {
     const sheets = await SheetModel.find({ prId });
     sheets.forEach(sheet => {
       sheet.sheet.push({ uuid: songData.uuid, orderId: pr.songList.length, rank: null, score: null, comment: "" });
+      sheet.latestUpdate = new Date().toISOString();
       sheet.save();
     });
 
@@ -305,6 +306,11 @@ export class PRService {
     pr.prStats = prData.prStats;
     if (prData.finished) {
       pr.status = PRStatus.FINISHED;
+    } else if (prData.nomination) {
+      if (!prData.nomination.endNomination) {
+        pr.status = PRStatus.NOMINATION;
+      }
+      pr.status = PRStatus.RANKING;
     } else {
       pr.status = PRStatus.RANKING;
     }
