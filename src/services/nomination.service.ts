@@ -34,6 +34,7 @@ export class NominationService {
             return {
               uuid,
               orderId,
+              isAllowedEdit: nominator === userId,
               nominator: pr.nomination.hidden ? undefined : nominator,
               artist: pr.nomination.blind ? undefined : artist,
               title: pr.nomination.blind ? undefined : title,
@@ -85,6 +86,46 @@ export class NominationService {
     songData.nominator = userId;
 
     this.prService.addSongPR(prId, songData);
+  }
+
+  public async getNominationSong(prId: string, userId: string, uuid: string): Promise<Song> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+    const song = pr.songList.find(song => song.uuid === uuid);
+    if (!song) {
+      throw new HttpException(404, `Song doesn't exist`);
+    }
+    if (song.nominator !== userId) {
+      throw new HttpException(403, `You are not the nominator of this song`);
+    }
+    
+    return song;
+  }
+
+  public async editNomination(prId: string, userId: string, uuid: string, songData: Song) {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+    const song = pr.songList.find(song => song.uuid === uuid);
+    if (!song) {
+      throw new HttpException(404, `Song doesn't exist`);
+    }
+    if (song.nominator !== userId) {
+      throw new HttpException(403, `You are not the nominator of this song`);
+    }
+
+    song.artist = songData.artist;
+    song.title = songData.title;
+    song.source = songData.source;
+    song.type = songData.type;
+    song.startSample = songData.startSample;
+    song.urlVideo = songData.urlVideo;
+    song.urlAudio = songData.urlAudio;
+
+    await pr.save();
   }
 
   public async endNomination(prId: string) {

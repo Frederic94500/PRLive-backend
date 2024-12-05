@@ -33,6 +33,33 @@ export class NominationController {
     }
   }
 
+  public getNominationSong = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      const prId = req.params.prId;
+      const userId = req.user.id;
+      const uuid = req.params.uuid;
+      const song = await this.nominationService.getNominationSong(prId, userId, uuid);
+      
+      sendJSON(res, 200, song);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
+  public editNomination = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      const prId = req.params.prId;
+      const userId = req.user.id;
+      const uuid = req.params.uuid;
+      const songData: Song = req.body;
+      await this.nominationService.editNomination(prId, userId, uuid, songData);
+      
+      sendJSON(res, 200, 'Nomination edited');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public endNomination = async (req: Request, res: Response) => {
     try {
       const prId = req.params.prId;
