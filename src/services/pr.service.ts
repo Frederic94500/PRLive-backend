@@ -291,11 +291,8 @@ export class PRService {
     pr.prStats = prData.prStats;
     if (prData.finished) {
       pr.status = PRStatus.FINISHED;
-    } else if (prData.nomination) {
-      if (!prData.nomination.endNomination) {
-        pr.status = PRStatus.NOMINATION;
-      }
-      pr.status = PRStatus.RANKING;
+    } else if (prData.nomination && !prData.nomination.endNomination) {
+      pr.status = PRStatus.NOMINATION;
     } else {
       pr.status = PRStatus.RANKING;
     }

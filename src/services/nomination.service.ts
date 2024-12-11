@@ -27,24 +27,26 @@ export class NominationService {
 
     const remainingNominations =
       pr.nomination.songPerUser - pr.nomination.nominatedSongList.filter(nominated => nominated.nominator === userId).length;
-    const songList =
-      pr.songList && !pr.nomination.hideNominatedSongList
-        ? pr.songList.map(song => {
-            const { uuid, orderId, nominator, artist, title, source, type, urlVideo, urlAudio } = song;
-            return {
-              uuid,
-              orderId,
-              isAllowedEdit: nominator === userId,
-              nominator: pr.nomination.hidden ? undefined : nominator,
-              artist: pr.nomination.blind ? undefined : artist,
-              title: pr.nomination.blind ? undefined : title,
-              source: pr.nomination.blind ? undefined : source,
-              type,
-              urlVideo: pr.nomination.blind ? undefined : urlVideo,
-              urlAudio: pr.nomination.blind ? undefined : urlAudio,
-            };
-          })
-      : [];
+    let songList = pr.songList
+      .map(song => {
+        const { uuid, orderId, nominator, artist, title, source, type, urlVideo, urlAudio } = song;
+        return {
+          uuid,
+          orderId,
+          isAllowedEdit: nominator === userId,
+          nominator: pr.nomination.hidden ? undefined : users.find(user => nominator === user.discordId).name,
+          artist: pr.nomination.blind ? undefined : artist,
+          title: pr.nomination.blind ? undefined : title,
+          source: pr.nomination.blind ? undefined : source,
+          type: pr.nomination.blind ? undefined : type,
+          urlVideo: pr.nomination.blind ? undefined : urlVideo,
+          urlAudio: pr.nomination.blind ? undefined : urlAudio,
+        };
+      }).filter(song => !pr.nomination.hideNominatedSongList || song.isAllowedEdit);
+
+    if (pr.nomination.blind) {
+      songList = songList.filter(song => song.isAllowedEdit);
+    }
 
     return {
       _id: pr.nomination._id,
@@ -59,12 +61,14 @@ export class NominationService {
       numberSongs: pr.songList.length,
       remainingNominations,
       songList,
-      nominators: pr.nomination.hidden ? null : users.map(user => {
-        return {
-          nominator: user.discordId,
-          name: user.name,
-        };
-      }),
+      nominators: pr.nomination.hidden
+        ? null
+        : users.map(user => {
+            return {
+              nominator: user.discordId,
+              name: user.name,
+            };
+          }),
     };
   }
 
@@ -100,7 +104,7 @@ export class NominationService {
     if (song.nominator !== userId) {
       throw new HttpException(403, `You are not the nominator of this song`);
     }
-    
+
     return song;
   }
 
@@ -143,10 +147,12 @@ export class NominationService {
     pr.nomination.endNomination = true;
     pr.status = PRStatus.RANKING;
 
-    pr.songList = pr.songList.sort((a, b) => Math.random() - 0.5).map((song, index) => {
-      song.orderId = index + 1;
-      return song;
-    });
+    pr.songList = pr.songList
+      .sort((a, b) => Math.random() - 0.5)
+      .map((song, index) => {
+        song.orderId = index + 1;
+        return song;
+      });
     pr.hashKey = hashKey(pr);
 
     await pr.save();
