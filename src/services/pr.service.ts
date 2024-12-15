@@ -296,7 +296,12 @@ export class PRService {
     } else {
       pr.status = PRStatus.RANKING;
     }
-    await pr.save();
+
+    try {
+      await pr.save();
+    } catch (err) {
+      throw new HttpException(400, `Error updating PR: ${err}`);
+    }
   }
 
   private checkTie(pr: PROutput): Tie {

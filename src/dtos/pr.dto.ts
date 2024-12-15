@@ -1,6 +1,8 @@
 import { AnisongDb, Song } from '@/interfaces/song.interface';
-import { IsArray, IsBoolean, IsISO8601, IsNotEmpty, IsNumber, IsPositive, IsString, IsUUID, IsUrl, Min, ValidateNested, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
+import { IsArray, IsBoolean, IsEnum, IsISO8601, IsNotEmpty, IsNumber, IsOptional, IsPositive, IsString, IsUUID, IsUrl, Min, ValidateNested, ValidationArguments, ValidationOptions, registerDecorator } from 'class-validator';
 
+import { NominationDto } from './nomination.dto';
+import { PRStatus } from '@/enums/prStatus.enum';
 import { Type } from 'class-transformer';
 
 export class CreatePRDto {
@@ -129,6 +131,16 @@ export class UpdatePRDto {
   @IsString()
   @IsNotEmpty()
   public creator: string;
+
+  @IsString()
+  @IsNotEmpty()
+  @IsEnum(PRStatus)
+  public status: string;
+
+  @IsOptional()
+  @ValidateNested()
+  @Type(() => NominationDto)
+  public nomination?: NominationDto;
   
   @IsISO8601({ strict: true })
   @IsNotEmpty()
