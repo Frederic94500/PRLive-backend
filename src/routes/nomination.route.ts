@@ -20,6 +20,7 @@ export class NominationRoute implements Routes {
     this.router.post(`${this.path}/nominate/:prId`, checkAuth, ValidationMiddleware(NominateDto), this.nominationController.nominate);
     this.router.get(`${this.path}/getnomination/:prId/:uuid`, checkAuth, this.nominationController.getNominationSong);
     this.router.put(`${this.path}/editnomination/:prId/:uuid`, checkAuth, ValidationMiddleware(NominateDto), this.nominationController.editNomination);
+    this.router.delete(`${this.path}/deletenomination/:prId/:uuid`, checkAuth, this.nominationController.deleteNomination);
     this.router.put(`${this.path}/endnomination/:prId`, checkCreator, this.nominationController.endNomination);
   }
 }

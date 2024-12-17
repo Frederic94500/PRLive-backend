@@ -120,6 +120,9 @@ export class NominationService {
     if (song.nominator !== userId) {
       throw new HttpException(403, `You are not the nominator of this song`);
     }
+    if (pr.nomination.endNomination) {
+      throw new HttpException(400, `Nomination is closed`);
+    }
 
     song.artist = songData.artist;
     song.title = songData.title;
@@ -129,6 +132,34 @@ export class NominationService {
     song.urlVideo = songData.urlVideo;
     song.urlAudio = songData.urlAudio;
 
+    await pr.save();
+  }
+
+  public async deleteNomination(prId: string, userId: string, uuid: string) {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+    const song = pr.songList.find(song => song.uuid === uuid);
+    if (!song) {
+      throw new HttpException(404, `Song doesn't exist`);
+    }
+    if (song.nominator !== userId) {
+      throw new HttpException(403, `You are not the nominator of this song`);
+    }
+    if (pr.nomination.endNomination) {
+      throw new HttpException(400, `Nomination is closed`);
+    }
+
+    pr.songList = pr.songList.filter(song => song.uuid !== uuid);
+    pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.filter(nominated => nominated.uuid !== uuid);
+    pr.songList = pr.songList.map((song, index) => {
+      song.orderId = index;
+      return song;
+    });
+    pr.hashKey = hashKey(pr);
+    pr.numberSongs = pr.songList.length;
+    pr.mustBe = (pr.numberSongs * (pr.numberSongs + 1)) / 2;
     await pr.save();
   }
 
@@ -150,10 +181,12 @@ export class NominationService {
     pr.songList = pr.songList
       .sort((a, b) => Math.random() - 0.5)
       .map((song, index) => {
-        song.orderId = index + 1;
+        song.orderId = index;
         return song;
       });
     pr.hashKey = hashKey(pr);
+    pr.numberSongs = pr.songList.length;
+    pr.mustBe = (pr.numberSongs * (pr.numberSongs + 1)) / 2;
 
     await pr.save();
 

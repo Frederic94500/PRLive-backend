@@ -60,6 +60,19 @@ export class NominationController {
     }
   }
 
+  public deleteNomination = async (req: Request & { user: { id: string }}, res: Response) => {
+    try {
+      const prId = req.params.prId;
+      const userId = req.user.id;
+      const uuid = req.params.uuid;
+      await this.nominationService.deleteNomination(prId, userId, uuid);
+      
+      sendJSON(res, 200, 'Nomination deleted');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public endNomination = async (req: Request, res: Response) => {
     try {
       const prId = req.params.prId;
