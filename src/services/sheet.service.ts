@@ -67,6 +67,11 @@ export class SheetService {
     if (pr.finished) {
       throw new HttpException(400, 'PR is finished, no more joining');
     }
+    if (pr.nomination) {
+      if (!pr.nomination.endNomination) {
+        throw new HttpException(400, 'Nomination is not closed yet');
+      }
+    }
 
     const user: User = await UserModel.findOne({ discordId: userId });
     sheet = {
