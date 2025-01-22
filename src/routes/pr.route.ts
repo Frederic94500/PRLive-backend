@@ -30,6 +30,7 @@ export class PRRoute implements Routes {
     this.router.get(`${this.path}/finished/:id`, checkAuthNonMandatory, this.prController.finished);
     this.router.delete(`${this.path}/delete/:id`, checkCreator, this.prController.deletePR);
     this.router.get(`${this.path}/get/:id`, checkAuth, this.prController.getPR);
+    this.router.get(`${this.path}/get/:id/:voterId`, this.prController.getPRNoAuth);
     this.router.get(`${this.path}/gets`, checkCreator, this.prController.gets);
     this.router.get(`${this.path}/getsimple`, this.prController.getSimple);
   }

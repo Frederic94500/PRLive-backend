@@ -31,6 +31,18 @@ export class PRController {
     }
   }
 
+  public getPRNoAuth = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const voterId: string = req.params.voterId;
+      const pr: PR = await this.prService.getPRNoAuth(prId, voterId);
+
+      sendJSON(res, 200, pr);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public addSongPR = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.id;

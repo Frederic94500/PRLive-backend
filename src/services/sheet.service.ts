@@ -128,6 +128,38 @@ export class SheetService {
     await SheetModel.findByIdAndUpdate(sheetData._id, sheetData);
   }
 
+  public async getSheetNoAuth(prId: string, voterId: string, sheetId: string): Promise<Sheet> {
+    const sheet = await SheetModel.findById(sheetId);
+    if (!sheet) {
+      throw new HttpException(404, 'Sheet not found');
+    }
+    if (sheet.prId !== prId || sheet.voterId !== voterId) {
+      throw new HttpException(400, 'Invalid sheet data');
+    }
+
+    return sheet;
+  }
+
+  public async editSheetNoAuth(sheetData: Sheet, prId: string, voterId: string, sheetId: string): Promise<void> {
+    if (sheetData.prId !== prId || sheetData.voterId !== voterId || sheetData._id !== sheetId) {
+      throw new HttpException(400, 'Invalid sheet data');
+    }
+
+    const hashkey = hashKey(sheetData);
+    const pr = await PRModel.findById(prId);
+
+    if (hashkey !== pr.hashKey) {
+      throw new HttpException(400, 'Invalid sheet data by hashkey');
+    }
+    if (pr.finished) {
+      throw new HttpException(400, 'PR is finished, no more editing');
+    }
+
+    sheetData.latestUpdate = Date.now().toString();
+
+    await SheetModel.findByIdAndUpdate(sheetId, sheetData);
+  }
+
   public async getSheetUser(prId: string, voterId: string): Promise<Sheet> {
     const sheet = await SheetModel.findOne({ prId, voterId });
     if (!sheet) {
@@ -152,6 +184,36 @@ export class SheetService {
     }
 
     await SheetModel.findOneAndDelete({ prId: prId, voterId: voterId });
+
+    try {
+      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
+      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as ThreadChannel;
+
+      discordChannelLog.send(`Sheet deleted for <@${voterId}> in PR: ${pr.name}`);
+      discordChannelThread.members.remove(voterId);
+    } catch (error) {
+      throw new HttpException(400, `Discord error: ${error}`);
+    }
+  }
+
+  public async deleteSheetNoAuth(prId: string, voterId: string, sheetId: string): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, 'PR not found');
+    }
+    if (pr.finished) {
+      throw new HttpException(400, 'PR is finished, no more deleting');
+    }
+
+    const sheet = await SheetModel.findById(sheetId);
+    if (!sheet) {
+      throw new HttpException(404, 'Sheet not found');
+    }
+    if (sheet.prId !== prId || sheet.voterId !== voterId) {
+      throw new HttpException(400, 'Invalid sheet data');
+    }
+
+    await SheetModel.findByIdAndDelete(sheetId);
 
     try {
       const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;

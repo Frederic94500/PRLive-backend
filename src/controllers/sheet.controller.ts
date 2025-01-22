@@ -44,6 +44,33 @@ export class SheetController {
     }
   };
 
+  public getSheetNoAuth = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.prId;
+      const voterId: string = req.params.voterId;
+      const sheetId: string = req.params.sheetId;
+      const sheet = await this.sheetService.getSheetNoAuth(prId, voterId, sheetId);
+
+      sendJSON(res, 200, sheet);
+    } catch (error) {
+      sendJSON(res, error.status, error);
+    }
+  };
+
+  public editSheetNoAuth = async (req: Request, res: Response) => {
+    try {
+      const sheetData: Sheet = req.body;
+      const prId: string = req.params.prId;
+      const voterId: string = req.params.voterId;
+      const sheetId: string = req.params.sheetId;
+      await this.sheetService.editSheetNoAuth(sheetData, prId, voterId, sheetId);
+
+      sendJSON(res, 200, 'Edited');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  };
+
   public getSheetVoter = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.prId;
@@ -73,6 +100,19 @@ export class SheetController {
       const prId: string = req.params.prId;
       const voterId: string = req.params.voterId;
       await this.sheetService.deleteSheetUser(prId, voterId, true);
+
+      sendJSON(res, 200, 'Deleted');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  };
+
+  public deleteSheetNoAuth = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.prId;
+      const voterId: string = req.params.voterId;
+      const sheetId: string = req.params.sheetId;
+      await this.sheetService.deleteSheetNoAuth(prId, voterId, sheetId);
 
       sendJSON(res, 200, 'Deleted');
     } catch (error) {

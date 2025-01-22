@@ -164,6 +164,15 @@ export class PRService {
     return pr;
   }
 
+  public async getPRNoAuth(prId: string, voterId: string): Promise<PR> {
+    const voter = await UserModel.findOne({ discordId: voterId });
+    if (!voter) {
+      throw new HttpException(404, `Voter doesn't exist`);
+    }
+
+    return this.getPR(prId);
+  }
+
   public async addSongPR(prId: string, songData: Song): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
