@@ -16,6 +16,7 @@ export interface PR {
   numberSongs: number;
   mustBe: number;
   threadId: string;
+  serverId: string;
   video?: string;
   affinityImage?: string;
   prStats?: string;
@@ -57,6 +58,7 @@ export interface PROutput {
   numberSongs: number;
   mustBe: number;
   threadId: string;
+  serverId: string;
   video?: string;
   affinityImage?: string;
   prStats?: string;

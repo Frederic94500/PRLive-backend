@@ -18,6 +18,10 @@ export class CreatePRDto {
   @IsNotEmpty()
   public deadline: string;
 
+  @IsString()
+  @IsNotEmpty()
+  public serverId: string;
+
   // @IsArray()
   // @ValidateNested({ each: true })
   // @Type(() => SongListDto)

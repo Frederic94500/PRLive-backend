@@ -8,6 +8,8 @@ import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
 import { PRStatus } from '@/enums/prStatus.enum';
+import { Server } from '@/interfaces/server.interface';
+import { ServerModel } from '@/models/server.model';
 import { Service } from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
@@ -96,6 +98,11 @@ export class PRService {
 
     console.log('parsed');
 
+    const server = await ServerModel.findById(prData.serverId);
+    if (!server) {
+      throw new HttpException(404, `Server doesn't exist`);
+    }
+
     prData.finished = false;
     prData.creator = creatorId;
     prData.numberSongs = prData.songList.length;
@@ -138,6 +145,8 @@ export class PRService {
     }
 
     pr.creator = (await UserModel.findOne({ discordId: pr.creator })).name;
+
+    pr.serverId = (await ServerModel.findById(pr.serverId)).name;
 
     if (pr.nomination) {
       pr.nomination.nominatedSongList = pr.nomination.nominatedSongList.map(nominated => {
@@ -375,6 +384,11 @@ export class PRService {
       throw new HttpException(404, `No users found`);
     }
 
+    const server = await ServerModel.findById(pr.serverId);
+    if (!server) {
+      pr.serverId = "";
+    }
+
     const prOutput: PROutput = {
       _id: pr._id,
       name: pr.name,
@@ -387,6 +401,7 @@ export class PRService {
       numberSongs: pr.songList.length,
       mustBe: pr.mustBe,
       threadId: pr.threadId,
+      serverId: server ? server.name : pr.serverId,
       video: pr.video,
       affinityImage: pr.affinityImage,
       prStats: pr.prStats,
@@ -576,15 +591,21 @@ export class PRService {
   }
 
   public async getSimple(): Promise<PR[]> {
+    const servers: Server[] = await ServerModel.find();
     const users: User[] = await UserModel.find();
     const prs: PR[] = await PRModel.find(
       {},
-      { _id: 1, name: 1, creator: 1, status: 1, nomination: { deadlineNomination: 1, hidden: 1, blind: 1, hideNominatedSongList: 1 }, deadline: 1, finished: 1, numberSongs: 1 },
+      { _id: 1, name: 1, creator: 1, status: 1, nomination: { deadlineNomination: 1, hidden: 1, blind: 1, hideNominatedSongList: 1 }, deadline: 1, finished: 1, numberSongs: 1, serverId: 1 },
     );
 
     prs.forEach(pr => {
       const creator = users.find(user => user.discordId === pr.creator);
       pr.creator = creator ? creator.name : pr.creator;
+    });
+
+    prs.forEach(pr => {
+      const server = servers.find(server => server._id.toString() === pr.serverId);
+      pr.serverId = server ? server.name : pr.serverId;
     });
 
     return prs;

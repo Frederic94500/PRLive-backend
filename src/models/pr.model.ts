@@ -44,6 +44,10 @@ const PRSchema = new Schema({
     type: String,
     required: false,
   },
+  serverId: {
+    type: String,
+    required: true,
+  },
   video: {
     type: String,
     required: false,
