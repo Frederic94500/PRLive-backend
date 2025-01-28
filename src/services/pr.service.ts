@@ -1,9 +1,9 @@
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
 import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID, DISCORD_BOT_SERVER_HOSTED_THREADS_ID } from '@/config';
 import { PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
 import { hashKey, sendToS3 } from '@/utils/toolbox';
 
+import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@/config';
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
@@ -48,10 +48,10 @@ export class PRService {
     });
   }
 
-  private async createDiscordThread(prData: PRInput, creatorId: string): Promise<string> {
+  private async createDiscordThread(server: Server, prData: PRInput, creatorId: string): Promise<string> {
     try {
-      const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
-      const discordChannelThreads = discordBot.channels.cache.get(DISCORD_BOT_SERVER_HOSTED_THREADS_ID) as TextChannel;
+      const discordServerName = discordBot.guilds.cache.get(server.discordId).name;
+      const discordChannelThreads = discordBot.channels.cache.get(server.threadsId) as TextChannel;
 
       if (discordChannelThreads) {
         const thread = await discordChannelThreads.threads.create({
@@ -76,6 +76,29 @@ export class PRService {
       );
     }
   }
+
+  // private async createDiscordAnnounceMessage(prData: PRInput, creatorId: string, message: string): Promise<string> {
+  //   try {
+  //     const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
+
+  //     const discordAnnounceChannel = discordBot.channels.cache.get() as TextChannel;
+  //     const discordMessageId = discordAnnounceChannel.send(
+  //       ``
+  //     )
+
+  //     const discordChannelLog = discordBot.channels.cache.get() as TextChannel;
+  //     discordChannelLog.send(
+  //       `Post announce message for PR ${prData.name} in announce channel in ${discordServerName}\nChannel: `,
+  //     );
+
+  //     return discordMessageId
+  //   } catch (err) {
+  //     const discordChannelLog = discordBot.channels.cache.get() as TextChannel;
+  //     discordChannelLog.send(
+  //       `Error during creating PR for: ${prData.name}\nError: ${err}`,
+  //     );
+  //   }
+  // }
 
   public async createPR(prData: PRInput, creatorId: string): Promise<void> {
     console.log('creating');
@@ -131,7 +154,7 @@ export class PRService {
       if (pr.nomination) {
         pr.nomination.prId = pr._id;
       }
-      pr.threadId = await this.createDiscordThread(prData, creatorId);
+      pr.threadId = await this.createDiscordThread(server, prData, creatorId);
       await pr.save();
     } catch (err) {
       new HttpException(400, `Error creating PR: ${err}`);

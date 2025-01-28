@@ -1,10 +1,11 @@
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_SERVER_HOSTED_ID } from '@config';
 import { Sheet, SheetSimple } from '@/interfaces/sheet.interface';
 import { TextChannel, ThreadChannel } from 'discord.js';
 
+import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@config';
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
 import { PRModel } from '@/models/pr.model';
+import { ServerModel } from '@/models/server.model';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
 import { SheetStatus } from '@/enums/sheetStatus.enum';
@@ -45,21 +46,6 @@ export class SheetService {
       return sheet;
     }
 
-    try {
-      const guild = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID);
-      if (!guild) {
-        throw new HttpException(404, 'Server not found');
-      }
-
-      const userInDiscord = await guild.members.fetch(userId);
-      if (!userInDiscord) {
-        throw new HttpException(403, 'User is not in the server');
-      }
-    } catch (error) {
-      console.error(`Error fetching user ${userId} in guild ${DISCORD_BOT_SERVER_HOSTED_ID}:`, error);
-      throw new HttpException(403, 'User is not in the server');
-    }
-
     const pr: PR = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, 'PR not found');
@@ -71,6 +57,26 @@ export class SheetService {
       if (!pr.nomination.endNomination) {
         throw new HttpException(400, 'Nomination is not closed yet');
       }
+    }
+
+    const server = (await ServerModel.findById(pr.serverId));
+    if (!server) {
+      throw new HttpException(404, 'Server Discord not found');
+    }
+
+    try {
+      const guild = discordBot.guilds.cache.get(server.discordId);
+      if (!guild) {
+        throw new HttpException(404, 'Server not found');
+      }
+
+      const userInDiscord = await guild.members.fetch(userId);
+      if (!userInDiscord) {
+        throw new HttpException(403, 'User is not in the server');
+      }
+    } catch (error) {
+      console.error(`Error fetching user ${userId} in guild ${server.name} (ID: ${server.discordId}):`, error);
+      throw new HttpException(403, 'User is not in the server');
     }
 
     const user: User = await UserModel.findOne({ discordId: userId });
