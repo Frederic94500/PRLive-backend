@@ -1,9 +1,8 @@
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
-import { ChannelType, TextChannel, ThreadAutoArchiveDuration } from 'discord.js';
 import { PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
+import { createDiscordThread, deleteDiscordThread } from '@services/discord.service';
 import { hashKey, sendToS3 } from '@/utils/toolbox';
 
-import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@/config';
 import { FileType } from '@/enums/fileType.enum';
 import { HttpException } from '@/exceptions/httpException';
 import { PRModel } from '@/models/pr.model';
@@ -15,7 +14,6 @@ import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
-import discordBot from '@services/discord.service';
 import { v4 as uuidv4 } from 'uuid';
 
 @Service()
@@ -47,58 +45,6 @@ export class PRService {
       return song;
     });
   }
-
-  private async createDiscordThread(server: Server, prData: PRInput, creatorId: string): Promise<string> {
-    try {
-      const discordServerName = discordBot.guilds.cache.get(server.discordId).name;
-      const discordChannelThreads = discordBot.channels.cache.get(server.threadsId) as TextChannel;
-
-      if (discordChannelThreads) {
-        const thread = await discordChannelThreads.threads.create({
-          name: prData.name,
-          autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
-          type: ChannelType.PrivateThread,
-          reason: `${prData.name} for <@${creatorId}>`,
-        });
-        thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
-
-        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-        discordChannelLog.send(
-          `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
-        );
-
-        return thread.id;
-      }
-    } catch (err) {
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(
-        `Error during creating PR for: ${prData.name}\nError: ${err}`,
-      );
-    }
-  }
-
-  // private async createDiscordAnnounceMessage(prData: PRInput, creatorId: string, message: string): Promise<string> {
-  //   try {
-  //     const discordServerName = discordBot.guilds.cache.get(DISCORD_BOT_SERVER_HOSTED_ID).name;
-
-  //     const discordAnnounceChannel = discordBot.channels.cache.get() as TextChannel;
-  //     const discordMessageId = discordAnnounceChannel.send(
-  //       ``
-  //     )
-
-  //     const discordChannelLog = discordBot.channels.cache.get() as TextChannel;
-  //     discordChannelLog.send(
-  //       `Post announce message for PR ${prData.name} in announce channel in ${discordServerName}\nChannel: `,
-  //     );
-
-  //     return discordMessageId
-  //   } catch (err) {
-  //     const discordChannelLog = discordBot.channels.cache.get() as TextChannel;
-  //     discordChannelLog.send(
-  //       `Error during creating PR for: ${prData.name}\nError: ${err}`,
-  //     );
-  //   }
-  // }
 
   public async createPR(prData: PRInput, creatorId: string): Promise<void> {
     console.log('creating');
@@ -154,7 +100,7 @@ export class PRService {
       if (pr.nomination) {
         pr.nomination.prId = pr._id;
       }
-      pr.threadId = await this.createDiscordThread(server, prData, creatorId);
+      pr.threadId = await createDiscordThread(server, prData, creatorId);
       await pr.save();
     } catch (err) {
       new HttpException(400, `Error creating PR: ${err}`);
@@ -591,21 +537,8 @@ export class PRService {
     await SheetModel.deleteMany({ prId: prId });
 
     await pr.deleteOne();
-
-    try {
-      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
-      discordChannelThread.delete();
-
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(
-        `PR deleted: ${pr.name}`,
-      );
-    } catch (err) {
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(
-        `Error during delete PR for: ${pr.name}\nError: ${err}`,
-      );
-    }
+    
+    await deleteDiscordThread(pr);
   }
 
   public async getPRs(): Promise<PR[]> {
