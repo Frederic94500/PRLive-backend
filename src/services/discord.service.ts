@@ -9,6 +9,7 @@ import {
   Interaction,
   TextChannel,
   ThreadAutoArchiveDuration,
+  ThreadChannel,
 } from 'discord.js';
 import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN, ORIGIN } from '@config';
 import { PR, PRInput } from '@/interfaces/pr.interface';
@@ -69,7 +70,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
     await UserModel.create(newUser);
   }
   user = await UserModel.findOne({ discordId: userDiscord.id });
-  
+
   const sheet = await SheetModel.findOne({ prId: pr._id, voterId: userDiscord.id });
   if (sheet) {
     await interaction.reply({ content: 'You have already joined this PR.', ephemeral: true });
@@ -93,7 +94,10 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   await interaction.reply({ content: 'You have successfully joined the PR.', ephemeral: true });
 
   const userDM = await userDiscord.createDM();
-  const button = new ButtonBuilder().setLabel('Sheet').setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${newSheet._id}`);
+  const button = new ButtonBuilder()
+    .setLabel('Sheet')
+    .setStyle(ButtonStyle.Link)
+    .setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${newSheet._id}`);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
   try {
@@ -107,7 +111,7 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
 
   const discordChannelThread = client.channels.cache.get(pr.threadId) as TextChannel;
   discordChannelThread.send(`Welcome <@${user.discordId}>\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
-  
+
   sendDiscordLoggingMessage(`Sheet created for <@${user.discordId}> in PR ${pr.name} via Discord Announce Message`);
 });
 
@@ -162,8 +166,7 @@ export function createDiscordAnnounceMessage(server: Server, pr: PR, message: st
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
     discordAnnounceChannel.send({
-      content:
-`Hello <@&${server.roleId}>!
+      content: `Hello <@&${server.roleId}>!
 A new PR has been created by <@${pr.creator}>!
 # ${pr.name}
 ${message}
@@ -187,5 +190,27 @@ export function deleteDiscordThread(pr: PR): void {
     sendDiscordLoggingMessage(`PR deleted: ${pr.name}`);
   } catch (err) {
     sendDiscordLoggingMessage(`Error during deleting PR: ${pr.name}\nError: ${err}`);
+  }
+}
+
+export function addDiscordUserInThread(prName: string, prDeadline: string, threadId: string, voterId: string): void {
+  try {
+    const discordChannelThread = client.channels.cache.get(threadId) as TextChannel;
+    discordChannelThread.send(`Welcome <@${voterId}>\n\nDeadline: <t:${new Date(prDeadline).getTime() / 1000}:F>`);
+
+    sendDiscordLoggingMessage(`Sheet created for <@${voterId}> in PR: ${prName}`);
+  } catch (error) {
+    sendDiscordLoggingMessage(`Error during adding user ${voterId} in thread ${threadId}: ${error}`);
+  }
+}
+
+export function removeDiscordUserInThread(prName: string, threadId: string, voterId: string): void {
+  try {
+    const discordChannelThread = client.channels.cache.get(threadId) as ThreadChannel;
+
+    discordChannelThread.members.remove(voterId);
+    sendDiscordLoggingMessage(`Sheet deleted for <@${voterId}> in PR: ${prName}`);
+  } catch (error) {
+    sendDiscordLoggingMessage(`Error during removing user ${voterId} in thread ${threadId}: ${error}`);
   }
 }

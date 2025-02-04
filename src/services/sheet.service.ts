@@ -1,7 +1,6 @@
 import { Sheet, SheetSimple } from '@/interfaces/sheet.interface';
-import { TextChannel, ThreadChannel } from 'discord.js';
+import discordBot, { addDiscordUserInThread, removeDiscordUserInThread } from '@services/discord.service';
 
-import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@config';
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
 import { PRModel } from '@/models/pr.model';
@@ -11,7 +10,6 @@ import { SheetModel } from '@/models/sheet.model';
 import { SheetStatus } from '@/enums/sheetStatus.enum';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
-import discordBot from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
 
 @Service()
@@ -97,15 +95,7 @@ export class SheetService {
       }),
     };
 
-    try {
-      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as TextChannel;
-      discordChannelThread.send(`Welcome <@${userId}>\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
-
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(`Sheet created for <@${userId}> in PR: ${pr.name}`);
-    } catch (error) {
-      throw new HttpException(400, `Discord error: ${error}`);
-    }
+    addDiscordUserInThread(pr.name, pr.deadline, pr.threadId, userId);
 
     try {
       return await SheetModel.create(sheet);
@@ -191,15 +181,7 @@ export class SheetService {
 
     await SheetModel.findOneAndDelete({ prId: prId, voterId: voterId });
 
-    try {
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as ThreadChannel;
-
-      discordChannelLog.send(`Sheet deleted for <@${voterId}> in PR: ${pr.name}`);
-      discordChannelThread.members.remove(voterId);
-    } catch (error) {
-      throw new HttpException(400, `Discord error: ${error}`);
-    }
+    removeDiscordUserInThread(pr.name, pr.threadId, voterId);
   }
 
   public async deleteSheetNoAuth(prId: string, voterId: string, sheetId: string): Promise<void> {
@@ -221,14 +203,6 @@ export class SheetService {
 
     await SheetModel.findByIdAndDelete(sheetId);
 
-    try {
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      const discordChannelThread = discordBot.channels.cache.get(pr.threadId) as ThreadChannel;
-
-      discordChannelLog.send(`Sheet deleted for <@${voterId}> in PR: ${pr.name}`);
-      discordChannelThread.members.remove(voterId);
-    } catch (error) {
-      throw new HttpException(400, `Discord error: ${error}`);
-    }
+    removeDiscordUserInThread(pr.name, pr.threadId, voterId);
   }
 }
