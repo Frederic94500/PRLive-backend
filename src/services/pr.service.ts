@@ -1,6 +1,6 @@
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
-import { PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
-import { createDiscordThread, deleteDiscordThread } from '@services/discord.service';
+import { AnnouncePR, PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
+import { createDiscordAnnounceMessage, createDiscordThread, deleteDiscordThread } from '@services/discord.service';
 import { hashKey, sendToS3 } from '@/utils/toolbox';
 
 import { FileType } from '@/enums/fileType.enum';
@@ -490,6 +490,28 @@ export class PRService {
     };
 
     return prFinished;
+  }
+
+  public async announce(prId: string, data: AnnouncePR): Promise<void> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+    if (pr.finished) {
+      throw new HttpException(400, `PR is finished`);
+    }
+    if (pr.nomination) {
+      if (!pr.nomination.endNomination) {
+        throw new HttpException(400, `Nomination is not closed yet`);
+      }
+    }
+
+    const server = await ServerModel.findById(pr.serverId);
+    if (!server) {
+      throw new HttpException(404, `Server Discord not found`);
+    }
+
+    createDiscordAnnounceMessage(server, pr, data.message);
   }
 
   public async getTie(prId: string): Promise<Tie> {

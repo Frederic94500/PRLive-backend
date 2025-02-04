@@ -1,4 +1,4 @@
-import { Server } from "@/enums/server.enum";
+import { ServerEnum } from "@/enums/server.enum";
 
 export interface User {
   _id?: string;
@@ -7,7 +7,7 @@ export interface User {
   name: string;
   image: string;
   role: string;
-  server: Server;
+  server: ServerEnum;
 }
 
 export interface UserOutput {

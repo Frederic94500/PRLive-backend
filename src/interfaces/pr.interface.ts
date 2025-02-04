@@ -76,3 +76,7 @@ export interface PRFinished {
   hasSheet: boolean;
   resultTable: SongOutput[];
 }
+
+export interface AnnouncePR {
+  message: string;
+}

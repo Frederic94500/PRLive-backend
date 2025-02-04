@@ -188,3 +188,9 @@ export class TiebreakDto {
   @Type(() => TiebreakSongDto)
   public tieSongs: TiebreakSongDto[][];
 }
+
+export class AnnouncePRDto {
+  @IsString()
+  @IsNotEmpty()
+  public message: string;
+}

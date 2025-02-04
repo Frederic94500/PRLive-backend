@@ -7,6 +7,7 @@ import { Response } from 'express';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { createHash } from 'crypto';
 import s3Client from '@/services/aws.service';
+import { v4 as uuidv4 } from 'uuid';
 
 export function sendJSON(res: Response, code: number, data: any) {
   try {
@@ -57,4 +58,17 @@ export async function sendToS3(key: string, contentType: string, data: Buffer): 
   } catch (error) {
     throw new HttpException(500, 'Image upload failed');
   }
+}
+
+export async function uploadAvatar(id: string, avatar: string): Promise<string> {
+  let image = `https://cdn.discordapp.com/avatars/${id}/${avatar}.png`;
+  const response = await fetch(image);
+  if (response.ok) {
+    const imageBuffer = await downloadFile(image);
+    const filename = `${uuidv4()}.png`;
+    const key = `${id}/${filename}`;
+    image = await sendToS3(key, 'image/png', imageBuffer);
+  }
+
+  return image;
 }

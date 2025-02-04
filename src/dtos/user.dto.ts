@@ -1,6 +1,6 @@
 import { IsEnum, IsNotEmpty, IsString } from "class-validator";
 
-import { Server } from "@/enums/server.enum";
+import { ServerEnum } from "@/enums/server.enum";
 
 export class UserDto {
   @IsString()
@@ -11,7 +11,7 @@ export class UserDto {
   @IsNotEmpty()
   public image: string;
 
-  @IsEnum(Server)
+  @IsEnum(ServerEnum)
   @IsNotEmpty()
   public server: string;
 }

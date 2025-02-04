@@ -1,4 +1,4 @@
-import { PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
+import { AnnouncePR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
@@ -124,6 +124,18 @@ export class PRController {
       const pr: PRFinished = await this.prService.finished(prId, discordId);
 
       sendJSON(res, 200, pr);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
+  public announce = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const data: AnnouncePR = req.body;
+      await this.prService.announce(prId, data);
+
+      sendJSON(res, 201, 'Announced');
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }

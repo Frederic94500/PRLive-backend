@@ -2,7 +2,7 @@ import { downloadFile, sendToS3 } from '@/utils/toolbox';
 
 import { HttpException } from '@/exceptions/httpException';
 import { Role } from '@/enums/role.enum';
-import { Server } from '@/enums/server.enum';
+import { ServerEnum } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
@@ -34,7 +34,7 @@ export class AuthService {
         name: reqUser.username.charAt(0).toUpperCase() + reqUser.username.slice(1),
         image: image,
         role: Role.USER,
-        server: Server.EU,
+        server: ServerEnum.EU,
       };
       
       await UserModel.create(user);

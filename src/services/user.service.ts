@@ -1,7 +1,7 @@
 import { downloadFile, sendToS3 } from '@/utils/toolbox';
 
 import { HttpException } from '@exceptions/httpException';
-import { Server } from '@/enums/server.enum';
+import { ServerEnum } from '@/enums/server.enum';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
 import { User } from '@interfaces/user.interface';
@@ -25,7 +25,7 @@ export class UserService {
   }
 
   public async editUser(userData: User, userId: string, admin: boolean = false): Promise<User> {
-    const args: { name: string; image: string; server: Server; role?: string } = { name: userData.name, image: userData.image, server: userData.server || Server.EU }
+    const args: { name: string; image: string; server: ServerEnum; role?: string } = { name: userData.name, image: userData.image, server: userData.server || ServerEnum.EU }
     if (admin) {
       args.role = userData.role;
     }
