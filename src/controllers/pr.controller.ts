@@ -2,6 +2,7 @@ import { AnnouncePR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.
 import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
+import { FileType } from '@/enums/fileType.enum';
 import { PRService } from '@/services/pr.service';
 import { Song } from '@/interfaces/song.interface';
 import { sendJSON } from '@/utils/toolbox';
@@ -69,10 +70,15 @@ export class PRController {
 
   public uploadFilePR = async (req: Request, res: Response) => {
     try {
-      const prId: string = req.params.id;
-      const type = req.body.type;
+      const prId = req.params.id;
+      const type: FileType = req.body.type;
+      const voterId: string = req.body.voterId;
       const file = req.file;
-      await this.prService.uploadFilePR(prId, type, file);
+      if (type === FileType.PFP && voterId) {
+        await this.prService.uploadFilePR(prId, type, file, voterId);
+      } else {
+        await this.prService.uploadFilePR(prId, type, file);
+      }
 
       sendJSON(res, 200, 'File uploaded');
     } catch (error) {

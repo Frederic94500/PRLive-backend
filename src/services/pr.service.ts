@@ -230,7 +230,7 @@ export class PRService {
     }
   }
 
-  public async uploadFilePR(prId: string, type: string, file: Express.Multer.File): Promise<void> {
+  public async uploadFilePR(prId: string, type: FileType, file: Express.Multer.File, voterId?: string): Promise<void> {
     const pr = await PRModel.findById(prId);
     if (!pr) {
       throw new HttpException(404, `PR doesn't exist`);
@@ -243,6 +243,15 @@ export class PRService {
       pr.video = await sendToS3(key, file.mimetype, file.buffer);
     } else if (type === FileType.AFFINITY_IMAGE) {
       pr.affinityImage = await sendToS3(key, file.mimetype, file.buffer);
+    } else if (type === FileType.PFP) {
+      const sheet = await SheetModel.findOne({ prId, voterId });
+      if (!sheet) {
+        throw new HttpException(404, `Sheet doesn't exist`);
+      }
+
+      sheet.image = await sendToS3(key, file.mimetype, file.buffer);
+      sheet.latestUpdate = new Date().toISOString();
+      await sheet.save();
     } else {
       throw new HttpException(400, `Invalid type`);
     }
