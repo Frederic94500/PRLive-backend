@@ -58,7 +58,12 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
 
   const sheet = await SheetModel.findOne({ prId: pr._id, voterId: userDiscord.id });
   if (sheet) {
-    await interaction.reply({ content: 'You have already joined this PR.', ephemeral: true });
+    const button = new ButtonBuilder()
+      .setLabel('Sheet')
+      .setStyle(ButtonStyle.Link)
+      .setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${sheet._id}`);
+    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+    await interaction.reply({ content: 'You have already joined this PR. Here is your sheet.', components: [row], ephemeral: true });
     return;
   }
   const newSheet = await SheetModel.create({
@@ -76,8 +81,6 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
     })),
   });
 
-  await interaction.reply({ content: 'You have successfully joined the PR.', ephemeral: true });
-
   const userDM = await userDiscord.createDM();
   const button = new ButtonBuilder()
     .setLabel('Sheet')
@@ -85,13 +88,17 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
     .setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${newSheet._id}`);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
+  const message = `You have successfully joined PR **${pr.name}**!\nTo fill your sheet, please click Sheet.\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`
+
   try {
     await userDM.send({
-      content: `You have successfully joined PR **${pr.name}**!\nTo fill your sheet, please click Sheet.\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`,
+      content: message,
       components: [row],
     });
+    await interaction.reply({ content: 'You have successfully joined the PR. Please check your DM.', ephemeral: true });
   } catch (err) {
     sendDiscordLoggingMessage(`Error during sending DM to <@${user.discordId}> for sheet ${newSheet._id}: ${err}`);
+    await interaction.reply({ content: `Error during sending DM to you.\n\n${message}`, components: [row], ephemeral: true });
   }
 
   const discordChannelThread = client.channels.cache.get(pr.threadId) as TextChannel;

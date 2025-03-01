@@ -25,12 +25,15 @@ client.on(Events.InteractionCreate, async (interaction: Interaction) => {
   if (!interaction.isButton()) return;
 
   const customId = interaction.customId;
-  if (customId.startsWith('prjoin_')) {
-    await buttonPRJoinHandler(interaction);
-    return;
-  } else {
-    await interaction.reply({ content: 'Invalid button', ephemeral: true });
-    return;
+  try {
+    if (customId.startsWith('prjoin_')) {
+      await buttonPRJoinHandler(interaction);
+    } else {
+      await interaction.reply({ content: 'Invalid button', ephemeral: true });
+    }
+  } catch (err) {
+    await interaction.reply({ content: 'Error during handling button', ephemeral: true });
+    sendDiscordLoggingMessage(`Error during handling button: ${err}`);
   }
 });
 
