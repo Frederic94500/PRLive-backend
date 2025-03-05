@@ -11,9 +11,10 @@ import {
   ThreadAutoArchiveDuration,
   ThreadChannel,
 } from 'discord.js';
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN } from '@config';
+import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN, ORIGIN } from '@config';
 import { PR, PRInput } from '@/interfaces/pr.interface';
 
+import { PRStatus } from '@/enums/prStatus.enum';
 import { Server } from '@/interfaces/server.interface';
 import { buttonPRJoinHandler } from './discordAction.service';
 
@@ -83,16 +84,25 @@ export function createDiscordAnnounceMessage(server: Server, pr: PR, message: st
   try {
     const discordAnnounceChannel = client.channels.cache.get(server.announceId) as TextChannel;
 
-    const button = new ButtonBuilder().setLabel('Join PR').setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
-    const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+    const row = new ActionRowBuilder<ButtonBuilder>();
+
+    let infos = "";
+    if (pr.status === PRStatus.NOMINATION) {
+      infos = `Nomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F>\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`;
+      const button = new ButtonBuilder().setLabel('Nominate PR').setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/nomination/${pr._id}`);
+      row.addComponents(button);
+    } else if (pr.status === PRStatus.RANKING) {
+      infos = `Number of songs: **${pr.songList.length}**\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`;
+      const button = new ButtonBuilder().setLabel('Join PR').setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
+      row.addComponents(button);
+    }
 
     discordAnnounceChannel.send({
       content: `Hello <@&${server.roleId}>!
 A new PR has been created by <@${pr.creator}>!
 # ${pr.name}
 ${message}
-Number of songs: **${pr.songList.length}**
-Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>
+${infos}
 Click Join PR to participate!`,
       components: [row],
     });
@@ -109,9 +119,15 @@ export function createDiscordBulkAnnounceMessage(server: Server, prs: PR[], mess
     const row = new ActionRowBuilder<ButtonBuilder>();
     const prListing: string[] = [];
     for (const pr of prs) {
-      const button = new ButtonBuilder().setLabel(`Join ${pr.name}`).setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
-      row.addComponents(button);
-      prListing.push(`PR **${pr.name}** - **${pr.songList.length} songs** - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+      if (pr.status === PRStatus.RANKING) {
+        const button = new ButtonBuilder().setLabel(`Join ${pr.name}`).setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
+        row.addComponents(button);
+        prListing.push(`PR **${pr.name}** - **${pr.songList.length} songs** - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+      } else if (pr.status === PRStatus.NOMINATION) {
+        const button = new ButtonBuilder().setLabel(`Nominate ${pr.name}`).setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/nomination/${pr._id}`);
+        row.addComponents(button);
+        prListing.push(`PR **${pr.name}** - Nomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F> - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+      }
     }
     
     discordAnnounceChannel.send({

@@ -509,11 +509,6 @@ export class PRService {
     if (pr.finished) {
       throw new HttpException(400, `PR is finished`);
     }
-    if (pr.nomination) {
-      if (!pr.nomination.endNomination) {
-        throw new HttpException(400, `Nomination is not closed yet`);
-      }
-    }
 
     const server = await ServerModel.findById(pr.serverId);
     if (!server) {
