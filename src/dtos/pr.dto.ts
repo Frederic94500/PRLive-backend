@@ -194,3 +194,13 @@ export class AnnouncePRDto {
   @IsNotEmpty()
   public message: string;
 }
+
+export class BulkAnnouncePRDto {
+  @IsString()
+  @IsNotEmpty()
+  public message: string;
+
+  @IsArray()
+  @IsNotEmpty()
+  public prIds: string[];
+}

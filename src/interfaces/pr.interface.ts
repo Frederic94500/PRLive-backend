@@ -80,3 +80,8 @@ export interface PRFinished {
 export interface AnnouncePR {
   message: string;
 }
+
+export interface BulkAnnouncePR {
+  message: string;
+  prIds: string[];
+}

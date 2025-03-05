@@ -84,7 +84,6 @@ export function createDiscordAnnounceMessage(server: Server, pr: PR, message: st
     const discordAnnounceChannel = client.channels.cache.get(server.announceId) as TextChannel;
 
     const button = new ButtonBuilder().setLabel('Join PR').setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
-
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
     discordAnnounceChannel.send({
@@ -101,6 +100,31 @@ Click Join PR to participate!`,
     sendDiscordLoggingMessage(`Post announce message for PR ${pr.name} in announce channel in ${server.name}\nChannel: ${discordAnnounceChannel}`);
   } catch (err) {
     sendDiscordLoggingMessage(`Error during creating PR for: ${pr.name}\nError: ${err}`);
+  }
+}
+
+export function createDiscordBulkAnnounceMessage(server: Server, prs: PR[], message: string) {
+  try {
+    const discordAnnounceChannel = client.channels.cache.get(server.announceId) as TextChannel;
+    const row = new ActionRowBuilder<ButtonBuilder>();
+    const prListing: string[] = [];
+    for (const pr of prs) {
+      const button = new ButtonBuilder().setLabel(`Join ${pr.name}`).setStyle(ButtonStyle.Primary).setCustomId(`prjoin_${pr._id}`);
+      row.addComponents(button);
+      prListing.push(`PR **${pr.name}** - **${pr.songList.length} songs** - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+    }
+    
+    discordAnnounceChannel.send({
+      content: `Hello <@&${server.roleId}>!
+${message}
+${prListing.join('\n')}
+Click Join PR to participate!`,
+      components: [row],
+    });
+
+    sendDiscordLoggingMessage(`Post announce message for bulk PRs in announce channel in ${server.name}\nChannel: ${discordAnnounceChannel}`);
+  } catch (err) {
+    sendDiscordLoggingMessage(`Error during creating bulk announce message\nError: ${err}`);
   }
 }
 

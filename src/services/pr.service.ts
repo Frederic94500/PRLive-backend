@@ -1,6 +1,6 @@
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
-import { AnnouncePR, PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
-import { createDiscordAnnounceMessage, createDiscordThread, deleteDiscordThread } from '@services/discord.service';
+import { AnnouncePR, BulkAnnouncePR, PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
+import { createDiscordAnnounceMessage, createDiscordBulkAnnounceMessage, createDiscordThread, deleteDiscordThread } from '@services/discord.service';
 import { hashKey, sendToS3 } from '@/utils/toolbox';
 
 import { FileType } from '@/enums/fileType.enum';
@@ -521,6 +521,34 @@ export class PRService {
     }
 
     createDiscordAnnounceMessage(server, pr, data.message);
+  }
+
+  public async bulkAnnounce(data: BulkAnnouncePR): Promise<void> {
+    const servers: Server[] = [];
+    const prs: PR[] = [];
+    for (const prId of data.prIds) {
+      const pr = await PRModel.findById(prId);
+      if (!pr) {
+        throw new HttpException(404, `PR ${pr._id} doesn't exist`);
+      }
+      if (pr.finished) {
+        throw new HttpException(400, `PR ${pr.name} is finished`);
+      }
+
+      const server = await ServerModel.findById(pr.serverId);
+      if (!server) {
+        throw new HttpException(404, `Server Discord not found`);
+      }
+      
+      servers.push(server);
+      prs.push(pr);
+    }
+
+    if (new Set(servers.map(server => server._id.toString())).size !== 1) {
+      throw new HttpException(400, `Servers don't match, you must bulk announce PRs from the same server`);
+    }
+
+    createDiscordBulkAnnounceMessage(servers[0], prs, data.message);
   }
 
   public async getTie(prId: string): Promise<Tie> {

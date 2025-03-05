@@ -1,4 +1,4 @@
-import { AnnouncePR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
+import { AnnouncePR, BulkAnnouncePR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
@@ -142,6 +142,17 @@ export class PRController {
       await this.prService.announce(prId, data);
 
       sendJSON(res, 201, 'Announced');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
+  public bulkAnnounce = async (req: Request, res: Response) => {
+    try {
+      const data: BulkAnnouncePR = req.body;
+      await this.prService.bulkAnnounce(data);
+
+      sendJSON(res, 201, 'Bulk announced');
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }

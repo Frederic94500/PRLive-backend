@@ -1,4 +1,4 @@
-import { AddSongPRDto, AnnouncePRDto, CreatePRDto, TiebreakDto, UpdatePRDto } from '@/dtos/pr.dto';
+import { AddSongPRDto, AnnouncePRDto, BulkAnnouncePRDto, CreatePRDto, TiebreakDto, UpdatePRDto } from '@/dtos/pr.dto';
 import { checkAuth, checkAuthNonMandatory, checkCreator } from '@/middlewares/auth.middleware';
 
 import { PRController } from '@/controllers/pr.controller';
@@ -29,6 +29,7 @@ export class PRRoute implements Routes {
     this.router.get(`${this.path}/output/:id`, checkCreator, this.prController.output);
     this.router.get(`${this.path}/finished/:id`, checkAuthNonMandatory, this.prController.finished);
     this.router.post(`${this.path}/announce/:id`, checkCreator, ValidationMiddleware(AnnouncePRDto), this.prController.announce);
+    this.router.post(`${this.path}/bulkannounce`, checkCreator, ValidationMiddleware(BulkAnnouncePRDto), this.prController.bulkAnnounce);
     this.router.delete(`${this.path}/delete/:id`, checkCreator, this.prController.deletePR);
     this.router.get(`${this.path}/get/:id`, checkAuth, this.prController.getPR);
     this.router.get(`${this.path}/get/:id/:voterId`, this.prController.getPRNoAuth);
