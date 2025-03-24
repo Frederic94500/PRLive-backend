@@ -1,4 +1,4 @@
-import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
+import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, PRL_VTS3A_URL } from '@/config';
 
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
@@ -71,4 +71,24 @@ export async function uploadAvatar(id: string, avatar: string): Promise<string> 
   }
 
   return image;
+}
+
+export async function askToUploadAudio(urlVideo: string, key: string, uuid: string): Promise<void> {
+  const payload = {
+    url: urlVideo,
+    folder: key,
+    uuid: uuid,
+  }
+  const response = await fetch(`${PRL_VTS3A_URL}/upload`, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(payload),
+  });
+  if (response.ok) {
+    console.log("OK");
+  } else {
+    console.log(response.status);
+  }
 }

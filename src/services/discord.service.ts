@@ -11,30 +11,45 @@ import {
   ThreadAutoArchiveDuration,
   ThreadChannel,
 } from 'discord.js';
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN, ORIGIN } from '@config';
+import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN } from '@config';
 import { PR, PRInput } from '@/interfaces/pr.interface';
+import { buttonPRJoinHandler, buttonPRModalPickHandler, modalPRPickHandler } from './discordAction.service';
 
 import { PRStatus } from '@/enums/prStatus.enum';
 import { Server } from '@/interfaces/server.interface';
-import { buttonPRJoinHandler } from './discordAction.service';
 
 const client = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMessages, GatewayIntentBits.MessageContent, GatewayIntentBits.DirectMessages],
 });
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-  if (!interaction.isButton()) return;
-
-  const customId = interaction.customId;
-  try {
-    if (customId.startsWith('prjoin_')) {
-      await buttonPRJoinHandler(interaction);
-    } else {
-      await interaction.reply({ content: 'Invalid button', ephemeral: true });
+  if (interaction.isButton()) {
+    const customId = interaction.customId;
+    try {
+      if (customId.startsWith('prjoin_')) {
+        await buttonPRJoinHandler(interaction);
+      } else if (customId.startsWith('prmodalpick_')) {
+        await buttonPRModalPickHandler(interaction);
+      } else {
+        await interaction.reply({ content: 'Invalid button', ephemeral: true });
+      }
+    } catch (err) {
+      await interaction.reply({ content: 'Error during handling button', ephemeral: true });
+      sendDiscordLoggingMessage(`Error during handling button: ${err}`);
+      console.log(err);
     }
-  } catch (err) {
-    await interaction.reply({ content: 'Error during handling button', ephemeral: true });
-    sendDiscordLoggingMessage(`Error during handling button: ${err}`);
+  } else if (interaction.isModalSubmit()) {
+    const customId = interaction.customId;
+    try {
+      if (customId.startsWith('prpick_')) {
+        await modalPRPickHandler(interaction);
+      } else {
+        await interaction.reply({ content: 'Invalid modal', ephemeral: true });
+      }
+    } catch (err) {
+      await interaction.reply({ content: 'Error during handling modal', ephemeral: true });
+      sendDiscordLoggingMessage(`Error during handling modal: ${err}`);
+    }
   }
 });
 
@@ -88,8 +103,8 @@ export function createDiscordAnnounceMessage(server: Server, pr: PR, message: st
 
     let infos = "";
     if (pr.status === PRStatus.NOMINATION) {
-      infos = `Nomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F>\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`;
-      const button = new ButtonBuilder().setLabel('Nominate PR').setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/nomination/${pr._id}`);
+      infos = `Pick per user: **${pr.nomination.songPerUser}**\nNomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F>\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`;
+      const button = new ButtonBuilder().setLabel('Pick PR').setStyle(ButtonStyle.Primary).setCustomId(`prmodalpick_${pr._id}`);
       row.addComponents(button);
     } else if (pr.status === PRStatus.RANKING) {
       infos = `Number of songs: **${pr.songList.length}**\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`;
@@ -124,9 +139,9 @@ export function createDiscordBulkAnnounceMessage(server: Server, prs: PR[], mess
         row.addComponents(button);
         prListing.push(`PR **${pr.name}** - **${pr.songList.length} songs** - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
       } else if (pr.status === PRStatus.NOMINATION) {
-        const button = new ButtonBuilder().setLabel(`Nominate ${pr.name}`).setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/nomination/${pr._id}`);
+        const button = new ButtonBuilder().setLabel(`Pick ${pr.name}`).setStyle(ButtonStyle.Primary).setCustomId(`prmodalpick_${pr._id}`);
         row.addComponents(button);
-        prListing.push(`PR **${pr.name}** - Nomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F> - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
+        prListing.push(`PR **${pr.name}** - **Pick per user: ${pr.nomination.songPerUser}** - Nomination deadline: <t:${new Date(pr.nomination.deadlineNomination).getTime() / 1000}:F> - Deadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`);
       }
     }
     
