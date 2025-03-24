@@ -79,16 +79,20 @@ export async function askToUploadAudio(urlVideo: string, key: string, uuid: stri
     folder: key,
     uuid: uuid,
   }
-  const response = await fetch(`${PRL_VTS3A_URL}/upload`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(payload),
-  });
-  if (response.ok) {
-    console.log("OK");
-  } else {
-    console.log(response.status);
+  try {
+    const response = await fetch(`${PRL_VTS3A_URL}/upload`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(payload),
+    });
+    if (response.ok) {
+      console.log("OK");
+    } else {
+      console.log(response.status);
+    }
+  } catch (error) {
+    console.log(error);
   }
 }
