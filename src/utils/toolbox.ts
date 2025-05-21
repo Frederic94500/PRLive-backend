@@ -1,10 +1,11 @@
-import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL, PRL_VTS3A_URL } from '@/config';
+import { AWS_S3_BUCKET_NAME, AWS_S3_STATIC_PAGE_URL } from '@/config';
 
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
 import { PutObjectCommand } from '@aws-sdk/client-s3';
 import { Response } from 'express';
 import { Sheet } from '@/interfaces/sheet.interface';
+import { amqpService } from '@/services/amqp.service';
 import { createHash } from 'crypto';
 import s3Client from '@/services/aws.service';
 import { v4 as uuidv4 } from 'uuid';
@@ -80,18 +81,7 @@ export async function askToUploadAudio(urlVideo: string, key: string, uuid: stri
     uuid: uuid,
   }
   try {
-    const response = await fetch(`${PRL_VTS3A_URL}/upload`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(payload),
-    });
-    if (response.ok) {
-      console.log("OK");
-    } else {
-      console.log(response.status);
-    }
+    amqpService.publish(JSON.stringify(payload));
   } catch (error) {
     console.log(error);
   }
