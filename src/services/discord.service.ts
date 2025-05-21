@@ -23,33 +23,37 @@ const client = new Client({
 });
 
 client.on(Events.InteractionCreate, async (interaction: Interaction) => {
-  if (interaction.isButton()) {
-    const customId = interaction.customId;
-    try {
-      if (customId.startsWith('prjoin_')) {
-        await buttonPRJoinHandler(interaction);
-      } else if (customId.startsWith('prmodalpick_')) {
-        await buttonPRModalPickHandler(interaction);
-      } else {
-        await interaction.reply({ content: 'Invalid button', ephemeral: true });
+  try {
+    if (interaction.isButton()) {
+      const customId = interaction.customId;
+      try {
+        if (customId.startsWith('prjoin_')) {
+          await buttonPRJoinHandler(interaction);
+        } else if (customId.startsWith('prmodalpick_')) {
+          await buttonPRModalPickHandler(interaction);
+        } else {
+          await interaction.reply({ content: 'Invalid button', ephemeral: true });
+        }
+      } catch (err) {
+        await interaction.reply({ content: 'Error during handling button', ephemeral: true });
+        sendDiscordLoggingMessage(`Error during handling button: ${err}`);
+        console.log(err);
       }
-    } catch (err) {
-      await interaction.reply({ content: 'Error during handling button', ephemeral: true });
-      sendDiscordLoggingMessage(`Error during handling button: ${err}`);
-      console.log(err);
-    }
-  } else if (interaction.isModalSubmit()) {
-    const customId = interaction.customId;
-    try {
-      if (customId.startsWith('prpick_')) {
-        await modalPRPickHandler(interaction);
-      } else {
-        await interaction.reply({ content: 'Invalid modal', ephemeral: true });
+    } else if (interaction.isModalSubmit()) {
+      const customId = interaction.customId;
+      try {
+        if (customId.startsWith('prpick_')) {
+          await modalPRPickHandler(interaction);
+        } else {
+          await interaction.reply({ content: 'Invalid modal', ephemeral: true });
+        }
+      } catch (err) {
+        await interaction.reply({ content: 'Error during handling modal', ephemeral: true });
+        sendDiscordLoggingMessage(`Error during handling modal: ${err}`);
       }
-    } catch (err) {
-      await interaction.reply({ content: 'Error during handling modal', ephemeral: true });
-      sendDiscordLoggingMessage(`Error during handling modal: ${err}`);
     }
+  } catch (err) {
+    console.log(err);
   }
 });
 
