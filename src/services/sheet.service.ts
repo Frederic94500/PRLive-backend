@@ -11,6 +11,7 @@ import { SheetStatus } from '@/enums/sheetStatus.enum';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { hashKey } from '@/utils/toolbox';
+import { createSpreadsheet } from './google.service';
 
 @Service()
 export class SheetService {
@@ -163,6 +164,34 @@ export class SheetService {
     }
 
     return sheet;
+  }
+
+  public async getGSheetUser(prId: string, userId: string): Promise<{status: number, url: string}> {
+    console.log('Getting gsheet for', prId, userId);
+    const sheet = await SheetModel.findOne({ prId, voterId: userId });
+    if (!sheet) {
+      throw new HttpException(404, 'Sheet not found');
+    }
+
+    if (!sheet.gsheet) {
+      const pr = await PRModel.findById(prId);
+      if (!pr) {
+        throw new HttpException(404, 'PR not found');
+      }
+
+      const user = await UserModel.findOne({ discordId: userId });
+      if (!user) {
+        throw new HttpException(404, 'Voter not found');
+      }
+
+      sheet.gsheet = await createSpreadsheet(pr, user, sheet);
+
+      await SheetModel.findByIdAndUpdate(sheet._id, sheet);
+
+      return {status: 201, url: `https://docs.google.com/spreadsheets/d/${sheet.gsheet}`};
+    }
+    
+    return {status: 200, url: `https://docs.google.com/spreadsheets/d/${sheet.gsheet}`};
   }
 
   public async deleteSheetUser(prId: string, voterId: string, creator: boolean = false): Promise<void> {

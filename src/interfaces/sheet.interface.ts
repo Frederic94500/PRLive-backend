@@ -10,6 +10,7 @@ export interface Sheet {
     latestUpdate: string;
     name: string;
     image: string;
+    gsheet?: string;
     sheet: SheetSong[];
 }
 

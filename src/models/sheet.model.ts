@@ -23,6 +23,10 @@ const SheetSchema = new Schema({
     type: String,
     required: true,
   },
+  gsheet: {
+    type: String,
+    required: false,
+  },
   sheet: {
     type: [
       {

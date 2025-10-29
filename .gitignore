@@ -137,3 +137,5 @@ output.txt
 *.png
 *.mp4
 *.txt
+
+token.json
