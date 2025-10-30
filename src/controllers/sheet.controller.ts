@@ -96,6 +96,19 @@ export class SheetController {
     }
   };
 
+  public importGSheetVoter = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.prId;
+      const voterId: string = req.params.voterId;
+      const sheet = await this.sheetService.importGSheetUser(prId, voterId);
+
+      sendJSON(res, 200, sheet);
+    } catch (error) {
+      console.log(error);
+      sendJSON(res, error.status, error);
+    }
+  };
+
   public deleteSheetUser = async (req: Request & { user: { id: string } }, res: Response) => {
     try {
       const prId: string = req.params.prId;

@@ -11,7 +11,7 @@ import { SheetStatus } from '@/enums/sheetStatus.enum';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { hashKey } from '@/utils/toolbox';
-import { createSpreadsheet } from './google.service';
+import { createSpreadsheet, importSpreadsheetToSheet } from './google.service';
 
 @Service()
 export class SheetService {
@@ -192,6 +192,32 @@ export class SheetService {
     }
     
     return {status: 200, url: `https://docs.google.com/spreadsheets/d/${sheet.gsheet}`};
+  }
+
+  public async importGSheetUser(prId: string, userId: string): Promise<Sheet> {
+    const sheet = await SheetModel.findOne({ prId, voterId: userId });
+    if (!sheet) {
+      throw new HttpException(404, 'Sheet not found');
+    }
+    if (!sheet.gsheet) {
+      throw new HttpException(400, 'No GSheet to import from');
+    }
+
+    const importedSheet = await importSpreadsheetToSheet(sheet.gsheet);
+    
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, 'PR not found');
+    }
+
+    sheet.sheet = importedSheet;
+    if (hashKey(sheet) !== pr.hashKey) {
+      throw new HttpException(400, 'Invalid sheet data by hashkey after import');
+    }
+    sheet.latestUpdate = Date.now().toString();
+    await SheetModel.findByIdAndUpdate(sheet._id, sheet);
+
+    return sheet;
   }
 
   public async deleteSheetUser(prId: string, voterId: string, creator: boolean = false): Promise<void> {

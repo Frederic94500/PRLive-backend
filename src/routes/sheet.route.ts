@@ -20,6 +20,7 @@ export class SheetRoute implements Routes {
     this.router.get(`${this.path}/:prId`, checkAuth, this.sheetController.getId);
     this.router.put(`${this.path}/:prId`, checkAuth, ValidationMiddleware(SheetDto), this.sheetController.editId);
     this.router.get(`${this.path}/gsheet/:prId/:voterId`, this.sheetController.getGSheetVoter);
+    this.router.get(`${this.path}/gsheet/import/:prId/:voterId`, this.sheetController.importGSheetVoter);
     this.router.get(`${this.path}/:prId/:voterId/:sheetId`, this.sheetController.getSheetNoAuth);
     this.router.put(`${this.path}/:prId/:voterId/:sheetId`, ValidationMiddleware(SheetDto), this.sheetController.editSheetNoAuth);
     this.router.get(`${this.path}/:prId/:voterId`, checkCreator, this.sheetController.getSheetVoter);

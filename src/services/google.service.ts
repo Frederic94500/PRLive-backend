@@ -4,7 +4,7 @@ import fs from 'fs';
 import { PR } from "@/interfaces/pr.interface";
 import { User } from "@/interfaces/user.interface";
 import { GOOGLE_CLIENT_ID, GOOGLE_REDIRECT_URIS, GOOGLE_SECRET } from '@/config';
-import { Sheet } from '@/interfaces/sheet.interface';
+import { Sheet, SheetSong } from '@/interfaces/sheet.interface';
 
 const TOKEN_PATH = 'token.json';
 
@@ -307,5 +307,46 @@ export async function createSpreadsheet(pr: PR, user: User, sheet: Sheet) {
   return spreadsheetId;
 }
 
+export async function importSpreadsheetToSheet(id: string): Promise<SheetSong[]> {
+  const auth = oAuth2Client;
+  const sheets = google.sheets({ version: "v4", auth });
 
+  const res = await sheets.spreadsheets.values.get({
+    spreadsheetId: id,
+    range: "Songs",
+  });
 
+  const rows = res.data.values;
+  if (!rows || rows.length < 2) {
+    throw new Error("No data found in the spreadsheet.");
+  }
+
+  const header = rows[0];
+  const dataRows = rows.slice(1).sort((a, b) => {
+    const orderIdIndex = header.indexOf("Order ID");
+    const orderA = parseInt(a[orderIdIndex], 10);
+    const orderB = parseInt(b[orderIdIndex], 10);
+    return orderA - orderB;
+  });
+  const sheetData: SheetSong[] = [];
+
+  for (const row of dataRows) {
+    const uuidIndex = header.indexOf("UUID");
+    const orderIdIndex = header.indexOf("Order ID");
+    const rankIndex = header.indexOf("Rank");
+    const scoreIndex = header.indexOf("Score");
+    const commentIndex = header.indexOf("Comments");
+    
+    const uuid = row[uuidIndex].match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)?.[0];
+    const orderId = parseInt(row[orderIdIndex], 10);
+    const rank = rankIndex !== -1 && row[rankIndex] ? parseInt(row[rankIndex], 10) : null;
+    const score = scoreIndex !== -1 && row[scoreIndex] ? parseFloat(row[scoreIndex]) : null;
+    const comment = commentIndex !== -1 ? row[commentIndex] : '';
+
+    if (uuid && !isNaN(orderId)) {
+      sheetData.push({ uuid, orderId, rank, score, comment });
+    }
+  }
+
+  return sheetData;
+}
