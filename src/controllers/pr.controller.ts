@@ -120,6 +120,17 @@ export class PRController {
     }
   }
 
+  public syncGSheetPR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const gsheetUrl: GSheetOutputPR = await this.prService.syncGSheetPR(prId);
+
+      sendJSON(res, 200, gsheetUrl);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
   public output = async (req: Request, res: Response) => {
     try {
       const prId: string = req.params.id;

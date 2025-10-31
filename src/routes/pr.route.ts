@@ -25,6 +25,7 @@ export class PRRoute implements Routes {
     this.router.get(`${this.path}/update/:id`, checkCreator, this.prController.getUpdatePR);
     this.router.put(`${this.path}/update/:id`, checkCreator, ValidationMiddleware(UpdatePRDto), this.prController.updatePR);
     this.router.get(`${this.path}/gsheet/create/:id`, checkCreator, this.prController.createGSheetPR);
+    this.router.get(`${this.path}/gsheet/sync/:id`, checkCreator, this.prController.syncGSheetPR);
     this.router.get(`${this.path}/tie/:id`, checkAuth, this.prController.getTie);
     this.router.put(`${this.path}/tiebreak/:id`, checkAuth, ValidationMiddleware(TiebreakDto), this.prController.tiebreak);
     this.router.get(`${this.path}/output/:id`, checkCreator, this.prController.output);

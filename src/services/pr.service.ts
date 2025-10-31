@@ -15,7 +15,7 @@ import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
-import { createSpreadsheet } from './google.service';
+import { createSpreadsheet, importSpreadsheetToSheet } from './google.service';
 import pLimit from 'p-limit';
 
 @Service()
@@ -325,6 +325,34 @@ export class PRService {
           await sheet.save();
         }
         return { userId: voter.discordId, id: voter.gsheet, create};
+      }))
+    );
+
+    return {prId, gsheets};
+  }
+
+  public async syncGSheetPR(prId: string): Promise<GSheetOutputPR> {
+    const prOutput = await this.output(prId);
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+    
+    const limit = pLimit(15);
+
+    const gsheets = await Promise.all(
+      prOutput.voters.map(voter => limit(async () => {
+        if (voter.gsheet) {
+          const sheet = await SheetModel.findOne({ prId, voterId: voter.discordId });
+
+          sheet.sheet = await importSpreadsheetToSheet(voter.gsheet);
+          if (hashKey(sheet) !== pr.hashKey) {
+            throw new HttpException(400, `Invalid sheet data by hashkey for voter ${voter.discordId}`);
+          }
+          sheet.latestUpdate = Date.now().toString();
+          await sheet.save();
+        }
+        return { userId: voter.discordId, id: voter.gsheet, create: false};
       }))
     );
 
