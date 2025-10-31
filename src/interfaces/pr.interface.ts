@@ -85,3 +85,12 @@ export interface BulkAnnouncePR {
   message: string;
   prIds: string[];
 }
+
+export interface GSheetOutputPR {
+  prId: string;
+  gsheets: {
+    userId: string,
+    id: string,
+    create: boolean
+  }[]
+}

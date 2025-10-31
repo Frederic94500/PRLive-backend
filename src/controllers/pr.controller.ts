@@ -1,4 +1,4 @@
-import { AnnouncePR, BulkAnnouncePR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
+import { AnnouncePR, BulkAnnouncePR, GSheetOutputPR, PR, PRFinished, PROutput, Tiebreak } from '@/interfaces/pr.interface';
 import { Request, Response } from 'express';
 
 import { Container } from 'typedi';
@@ -104,6 +104,17 @@ export class PRController {
       await this.prService.updatePR(prId, prData);
 
       sendJSON(res, 200, 'Updated');
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
+    }
+  }
+
+  public createGSheetPR = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const gsheetUrl: GSheetOutputPR = await this.prService.createGSheetPR(prId);
+
+      sendJSON(res, 200, gsheetUrl);
     } catch (error) {
       sendJSON(res, error.status, error.message);
     }

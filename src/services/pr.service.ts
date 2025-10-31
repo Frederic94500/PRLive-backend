@@ -1,5 +1,5 @@
 import { AnisongDb, Song, SongOutput } from '@/interfaces/song.interface';
-import { AnnouncePR, BulkAnnouncePR, PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
+import { AnnouncePR, BulkAnnouncePR, GSheetOutputPR, PR, PRFinished, PRInput, PROutput, Tie, Tiebreak } from '@/interfaces/pr.interface';
 import { createDiscordAnnounceMessage, createDiscordBulkAnnounceMessage, createDiscordThread, deleteDiscordThread } from '@services/discord.service';
 import { hashKey, sendToS3 } from '@/utils/toolbox';
 
@@ -15,6 +15,8 @@ import { SheetModel } from '@/models/sheet.model';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
+import { createSpreadsheet } from './google.service';
+import pLimit from 'p-limit';
 
 @Service()
 export class PRService {
@@ -300,6 +302,35 @@ export class PRService {
     }
   }
 
+  public async createGSheetPR(prId: string): Promise<GSheetOutputPR> {
+    const prOutput = await this.output(prId);
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    const limit = pLimit(15);
+
+    const gsheets = await Promise.all(
+      prOutput.voters.map(voter => limit(async () => {
+        const create = !voter.gsheet;
+        if (!voter.gsheet) {
+          const [sheet, user] = await Promise.all([
+            SheetModel.findOne({ prId, voterId: voter.discordId }),
+            UserModel.findOne({ discordId: voter.discordId }),
+          ]);
+
+          voter.gsheet = await createSpreadsheet(pr, user, sheet);
+          sheet.gsheet = voter.gsheet;
+          await sheet.save();
+        }
+        return { userId: voter.discordId, id: voter.gsheet, create};
+      }))
+    );
+
+    return {prId, gsheets};
+  }
+
   private checkTie(pr: PROutput): Tie {
     const tie: Tie = {
       prId: pr._id,
@@ -440,6 +471,7 @@ export class PRService {
           hasFinished: isFinished && ranks.length === uniqueRanks.size,
           staller: !isFinished,
           doubleRank: ranks.length !== uniqueRanks.size,
+          gsheet: sheet.gsheet,
         };
       }),
     };

@@ -18,4 +18,5 @@ export interface UserOutput {
   hasFinished: boolean;
   staller: boolean;
   doubleRank: boolean;
+  gsheet: string;
 }
