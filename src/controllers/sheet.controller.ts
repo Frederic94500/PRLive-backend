@@ -87,7 +87,8 @@ export class SheetController {
     try {
       const prId: string = req.params.prId;
       const voterId: string = req.params.voterId;
-      const gsheet = await this.sheetService.getGSheetUser(prId, voterId);
+      const sheetId: string = req.params.sheetId;
+      const gsheet = await this.sheetService.getGSheetUser(prId, voterId, sheetId);
 
       sendJSON(res, gsheet.status, gsheet.url);
     } catch (error) {
@@ -100,7 +101,8 @@ export class SheetController {
     try {
       const prId: string = req.params.prId;
       const voterId: string = req.params.voterId;
-      const sheet = await this.sheetService.importGSheetUser(prId, voterId);
+      const sheetId: string = req.params.sheetId;
+      const sheet = await this.sheetService.importGSheetUser(prId, voterId, sheetId);
 
       sendJSON(res, 200, sheet);
     } catch (error) {

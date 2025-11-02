@@ -166,11 +166,13 @@ export class SheetService {
     return sheet;
   }
 
-  public async getGSheetUser(prId: string, userId: string): Promise<{status: number, url: string}> {
-    console.log('Getting gsheet for', prId, userId);
-    const sheet = await SheetModel.findOne({ prId, voterId: userId });
+  public async getGSheetUser(prId: string, userId: string, sheetId: string): Promise<{status: number, url: string}> {
+    const sheet = await SheetModel.findById(sheetId);
     if (!sheet) {
       throw new HttpException(404, 'Sheet not found');
+    }
+    if (sheet.prId !== prId || sheet.voterId !== userId) {
+      throw new HttpException(400, 'Invalid sheet data');
     }
 
     if (!sheet.gsheet) {
@@ -194,10 +196,13 @@ export class SheetService {
     return {status: 200, url: `https://docs.google.com/spreadsheets/d/${sheet.gsheet}`};
   }
 
-  public async importGSheetUser(prId: string, userId: string): Promise<Sheet> {
-    const sheet = await SheetModel.findOne({ prId, voterId: userId });
+  public async importGSheetUser(prId: string, userId: string, sheetId: string): Promise<Sheet> {
+    const sheet = await SheetModel.findById(sheetId);
     if (!sheet) {
       throw new HttpException(404, 'Sheet not found');
+    }
+    if (sheet.prId !== prId || sheet.voterId !== userId) {
+      throw new HttpException(400, 'Invalid sheet data');
     }
     if (!sheet.gsheet) {
       throw new HttpException(400, 'No GSheet to import from');
