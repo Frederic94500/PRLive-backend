@@ -315,7 +315,7 @@ export class PRService {
       prOutput.voters.map(voter => limit(async () => {
         const create = !voter.gsheet;
         let error = "";
-        if (!voter.gsheet) {
+        if (create) {
           const [sheet, user] = await Promise.all([
             SheetModel.findOne({ prId, voterId: voter.discordId }),
             UserModel.findOne({ discordId: voter.discordId }),
@@ -359,6 +359,8 @@ export class PRService {
           }
           if (hashKey(sheet) !== pr.hashKey) {
             error = `Invalid sheet data by hashkey for voter ${voter.discordId}`;
+          } else if (prOutput.voters.find(v => v.discordId === voter.discordId).hasFinished) {
+            error = `Voter ${voter.discordId} has already finished, cannot sync`;
           } else {
             sheet.latestUpdate = Date.now().toString();
             await sheet.save();
