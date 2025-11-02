@@ -314,17 +314,22 @@ export class PRService {
     const gsheets = await Promise.all(
       prOutput.voters.map(voter => limit(async () => {
         const create = !voter.gsheet;
+        let error = "";
         if (!voter.gsheet) {
           const [sheet, user] = await Promise.all([
             SheetModel.findOne({ prId, voterId: voter.discordId }),
             UserModel.findOne({ discordId: voter.discordId }),
           ]);
 
-          voter.gsheet = await createSpreadsheet(pr, user, sheet);
-          sheet.gsheet = voter.gsheet;
-          await sheet.save();
+          try {
+            voter.gsheet = await createSpreadsheet(pr, user, sheet);
+            sheet.gsheet = voter.gsheet;
+            await sheet.save();
+          } catch (err) {
+            error = `Error creating GSheet for voter ${voter.discordId}: ${err}`;
+          }
         }
-        return { userId: voter.discordId, id: voter.gsheet, create};
+        return { userId: voter.discordId, id: voter.gsheet, create, error};
       }))
     );
 
@@ -342,17 +347,24 @@ export class PRService {
 
     const gsheets = await Promise.all(
       prOutput.voters.map(voter => limit(async () => {
+        let error = "";
         if (voter.gsheet) {
           const sheet = await SheetModel.findOne({ prId, voterId: voter.discordId });
 
-          sheet.sheet = await importSpreadsheetToSheet(voter.gsheet);
-          if (hashKey(sheet) !== pr.hashKey) {
-            throw new HttpException(400, `Invalid sheet data by hashkey for voter ${voter.discordId}`);
+          try {
+            sheet.sheet = await importSpreadsheetToSheet(voter.gsheet);
+          } catch (err) {
+            error = `Error importing GSheet for voter ${voter.discordId}: ${err}`;
+            return { userId: voter.discordId, id: voter.gsheet, error };
           }
-          sheet.latestUpdate = Date.now().toString();
-          await sheet.save();
+          if (hashKey(sheet) !== pr.hashKey) {
+            error = `Invalid sheet data by hashkey for voter ${voter.discordId}`;
+          } else {
+            sheet.latestUpdate = Date.now().toString();
+            await sheet.save();
+          }
         }
-        return { userId: voter.discordId, id: voter.gsheet, create: false};
+        return { userId: voter.discordId, id: voter.gsheet, error };
       }))
     );
 
