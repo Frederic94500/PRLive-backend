@@ -17,6 +17,7 @@ export interface PR {
   mustBe: number;
   threadId: string;
   serverId: string;
+  mandatoryGSheet: boolean;
   video?: string;
   affinityImage?: string;
   prStats?: string;
@@ -59,6 +60,7 @@ export interface PROutput {
   mustBe: number;
   threadId: string;
   serverId: string;
+  mandatoryGSheet: boolean;
   video?: string;
   affinityImage?: string;
   prStats?: string;

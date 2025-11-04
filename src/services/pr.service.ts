@@ -453,6 +453,7 @@ export class PRService {
       mustBe: pr.mustBe,
       threadId: pr.threadId,
       serverId: server ? server.name : pr.serverId,
+      mandatoryGSheet: pr.mandatoryGSheet,
       video: pr.video,
       affinityImage: pr.affinityImage,
       prStats: pr.prStats,
