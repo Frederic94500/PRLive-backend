@@ -102,7 +102,7 @@ export class PRService {
       if (pr.nomination) {
         pr.nomination.prId = pr._id;
       }
-      pr.threadId = await createDiscordThread(server, prData, creatorId);
+      pr.threadId = await createDiscordThread(server, pr, creatorId);
       await pr.save();
     } catch (err) {
       new HttpException(400, `Error creating PR: ${err}`);

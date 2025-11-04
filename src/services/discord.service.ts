@@ -11,8 +11,8 @@ import {
   ThreadAutoArchiveDuration,
   ThreadChannel,
 } from 'discord.js';
-import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN } from '@config';
-import { PR, PRInput } from '@/interfaces/pr.interface';
+import { DISCORD_BOT_LOGGING_CHANNEL_ID, DISCORD_BOT_TOKEN, ORIGIN } from '@config';
+import { PR } from '@/interfaces/pr.interface';
 import { buttonPRJoinHandler, buttonPRModalPickHandler, modalPRPickHandler } from './discordAction.service';
 
 import { PRStatus } from '@/enums/prStatus.enum';
@@ -74,28 +74,34 @@ export async function sendDiscordLoggingMessage(message: string): Promise<void> 
   }
 }
 
-export async function createDiscordThread(server: Server, prData: PRInput, creatorId: string): Promise<string> {
+export async function createDiscordThread(server: Server, pr: PR, creatorId: string): Promise<string> {
   try {
     const discordServerName = client.guilds.cache.get(server.discordId).name;
     const discordChannelThreads = client.channels.cache.get(server.threadsId) as TextChannel;
 
     if (discordChannelThreads) {
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(
+        new ButtonBuilder().setLabel('Sheet (login required)').setStyle(ButtonStyle.Link).setURL(`${ORIGIN}/sheet/${pr._id}`),
+      );
       const thread = await discordChannelThreads.threads.create({
-        name: prData.name,
+        name: pr.name,
         autoArchiveDuration: ThreadAutoArchiveDuration.OneWeek,
         type: ChannelType.PrivateThread,
-        reason: `${prData.name} for <@${creatorId}>`,
+        reason: `${pr.name} for <@${creatorId}>`,
       });
-      thread.send(`# ${prData.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`);
+      await thread.send({
+        content: `# ${pr.name}\nPR created by <@${creatorId}>\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`,
+        components: [row],
+      });
 
       sendDiscordLoggingMessage(
-        `New PR created by <@${creatorId}> in ${discordServerName}: ${prData.name}\n\nDeadline: <t:${new Date(prData.deadline).getTime() / 1000}:F>`,
+        `New PR created by <@${creatorId}> in ${discordServerName}: ${pr.name}\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`,
       );
 
       return thread.id;
     }
   } catch (err) {
-    sendDiscordLoggingMessage(`Error during creating PR for: ${prData.name}\nError: ${err}`);
+    sendDiscordLoggingMessage(`Error during creating PR for: ${pr.name}\nError: ${err}`);
   }
 }
 
