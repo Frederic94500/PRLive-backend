@@ -98,11 +98,13 @@ export async function createSpreadsheet(pr: PR, user: User, sheet: Sheet): Promi
   ];
 
   const rows = pr.songList.map((song) => {
+    const urlVideo = song.urlVideo.includes("http") ? song.urlVideo : `https://naedist.animemusicquiz.com/${song.urlVideo}`;
+    const urlAudio = song.urlAudio.includes("http") ? song.urlAudio : `https://naedist.animemusicquiz.com/${song.urlAudio}`;
     const artist = pr.nomination ? pr.nomination.blind ? "" : song.artist : song.artist;
     const title = pr.nomination ? pr.nomination.blind ? "" : song.title : song.title;
     const source = pr.nomination ? pr.nomination.blind ? "" : song.source : song.source;
     const type = pr.nomination ? pr.nomination.blind ? "" : song.type : song.type;
-    const videoUrl = pr.nomination ? pr.nomination.blind ? "" : `=HYPERLINK("${song.urlVideo}", "Video")` : `=HYPERLINK("${song.urlVideo}", "Video")`;
+    const videoUrl = pr.nomination ? pr.nomination.blind ? "" : `=HYPERLINK("${urlVideo}", "Video")` : `=HYPERLINK("${urlVideo}", "Video")`;
 
     const rank = sheet.sheet.find(s => s.uuid === song.uuid)?.rank || "";
     const score = sheet.sheet.find(s => s.uuid === song.uuid)?.score || "";
@@ -116,7 +118,7 @@ export async function createSpreadsheet(pr: PR, user: User, sheet: Sheet): Promi
       source,
       type,
       videoUrl,
-      `=HYPERLINK("${song.urlAudio}", "Audio")`,
+      `=HYPERLINK("${urlAudio}", "Audio")`,
       rank,
       score,
       comment,
