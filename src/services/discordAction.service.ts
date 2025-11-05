@@ -21,6 +21,7 @@ import { Song } from '@/interfaces/song.interface';
 import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { v4 as uuidv4 } from 'uuid';
+import { SheetService } from './sheet.service';
 
 const form = [
   {
@@ -85,6 +86,8 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
   
   const customId = interaction.customId;
   const prId = customId.split('_')[1];
+
+  await interaction.deferReply({ ephemeral: true });
   
   const pr = await PRModel.findById(prId);
   if (!pr) {
@@ -107,10 +110,14 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
 
   const sheet = await SheetModel.findOne({ prId: pr._id, voterId: userDiscord.id });
   if (sheet) {
+    let setURL = `${ORIGIN}/sheet/${pr._id}/${user.discordId}/${sheet._id}`;
+    if (pr.mandatoryGSheet) {
+      setURL = `https://docs.google.com/spreadsheets/d/${sheet.gsheet}`;
+    }
     const button = new ButtonBuilder()
       .setLabel('Sheet')
       .setStyle(ButtonStyle.Link)
-      .setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${sheet._id}`);
+      .setURL(setURL);
     const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
     await interaction.reply({ content: 'You have already joined this PR. Here is your sheet.', components: [row], ephemeral: true });
     return;
@@ -130,11 +137,21 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
     })),
   });
 
+  let setURL = `${ORIGIN}/sheet/${pr._id}/${user.discordId}/${newSheet._id}`;
+  if (pr.mandatoryGSheet) {
+    const response = await new SheetService().getGSheetUser(pr._id.toString(), user.discordId, newSheet._id);
+    if (response.status === 200 || response.status === 201) {
+      setURL = response.url;
+    } else {
+      sendDiscordLoggingMessage(`Error during creating Google Sheet for PR ${pr.name} and user <@${user.discordId}>: ${response}`);
+    }
+  }
+
   const userDM = await userDiscord.createDM();
   const button = new ButtonBuilder()
     .setLabel('Sheet')
     .setStyle(ButtonStyle.Link)
-    .setURL(`${ORIGIN}/sheet/${pr._id}/${user.discordId}/${newSheet._id}`);
+    .setURL(setURL);
   const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
 
   const message = `You have successfully joined PR **${pr.name}**!\nTo fill your sheet, please click Sheet.\n\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`
@@ -144,10 +161,10 @@ export async function buttonPRJoinHandler(interaction: Interaction) {
       content: message,
       components: [row],
     });
-    await interaction.reply({ content: 'You have successfully joined the PR. Please check your DM.', ephemeral: true });
+    await interaction.editReply({ content: 'You have successfully joined the PR. Please check your DM.' });
   } catch (err) {
     sendDiscordLoggingMessage(`Error during sending DM to <@${user.discordId}> for sheet ${newSheet._id}: ${err}`);
-    await interaction.reply({ content: `Error during sending DM to you.\n\n${message}`, components: [row], ephemeral: true });
+    await interaction.editReply({ content: `Error during sending DM to you.\n\n${message}`, components: [row] });
   }
 
   const discordChannelThread = client.channels.cache.get(pr.threadId) as TextChannel;

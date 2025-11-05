@@ -78,7 +78,7 @@ function computeColumnWidths(songsSheetId: number, header: string[], rows: strin
   }));
 }
 
-export async function createSpreadsheet(pr: PR, user: User, sheet: Sheet) {
+export async function createSpreadsheet(pr: PR, user: User, sheet: Sheet): Promise<string> {
   const auth = oAuth2Client;
   const sheets = google.sheets({ version: "v4", auth });
 
