@@ -1,4 +1,4 @@
-import { DISCORD_BOT_LOGGING_CHANNEL_ID } from '@/config';
+import { ORIGIN } from '@/config';
 import { HttpException } from '@/exceptions/httpException';
 import { NominationData } from '@/interfaces/nomination.interface';
 import { PRModel } from '@/models/pr.model';
@@ -7,10 +7,11 @@ import { PRStatus } from '@/enums/prStatus.enum';
 import { Service } from 'typedi';
 import { SheetModel } from '@/models/sheet.model';
 import { Song } from '@/interfaces/song.interface';
-import { TextChannel } from 'discord.js';
+import { ActionRowBuilder, ButtonBuilder, ButtonStyle, TextChannel } from 'discord.js';
 import { UserModel } from '@/models/user.model';
-import discordBot from '@services/discord.service';
+import discordBot, { sendDiscordLoggingMessage } from '@services/discord.service';
 import { hashKey } from '@/utils/toolbox';
+import { SheetService } from './sheet.service';
 
 @Service()
 export class NominationService {
@@ -212,11 +213,36 @@ export class NominationService {
       });
       await sheet.save();
       try {
-        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-        discordChannelLog.send(`Sheet created for <@${user.discordId}> in PR: ${pr.name}`);
+        sendDiscordLoggingMessage(`Sheet created for <@${user.discordId}> in PR: ${pr.name}`);
       } catch (error) {
-        const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-        discordChannelLog.send(`Error on Sheet creation for <@${user.discordId}> in PR: ${pr.name}`);
+        sendDiscordLoggingMessage(`Error on Sheet creation for <@${user.discordId}> in PR: ${pr.name}`);
+      }
+
+      let setURL = `${ORIGIN}/sheet/${pr._id}/${user.discordId}/${sheet._id}`;
+      if (pr.mandatoryGSheet) {
+        try {
+          const response = await new SheetService().getGSheetUser(pr._id.toString(), user.discordId, sheet._id);
+          setURL = response.url;
+        } catch (error) {
+          sendDiscordLoggingMessage(`Error on GSheet creation for <@${user.discordId}> in PR: ${pr.name}`);
+        }
+      }
+
+      const userDiscord = await discordBot.users.fetch(user.discordId);
+      const userDM = await userDiscord.createDM();
+      const button = new ButtonBuilder()
+        .setLabel('Sheet')
+        .setStyle(ButtonStyle.Link)
+        .setURL(setURL);
+      const row = new ActionRowBuilder<ButtonBuilder>().addComponents(button);
+      try {
+        await userDM.send({
+          content: `Nomination is closed for PR: **${pr.name}**!\nYour sheet is ready! Deadline: <t:${Math.floor(new Date(pr.deadline).getTime() / 1000)}:F>`,
+          components: [row],
+        });
+        sendDiscordLoggingMessage(`Nomination end DM sent to ${user.discordId} for PR: ${pr.name}`);
+      } catch (error) {
+        sendDiscordLoggingMessage(`Error during sending Nomination end DM to <@${user.discordId}> for PR: ${pr.name}`);
       }
     });
 
@@ -227,11 +253,9 @@ export class NominationService {
         `${pingUsers}\nNomination is closed, your sheet is ready!\nDeadline: <t:${new Date(pr.deadline).getTime() / 1000}:F>`,
       );
 
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(`Mass ping message for PR: ${pr.name}`);
+      sendDiscordLoggingMessage(`Mass ping message for PR: ${pr.name}`);
     } catch (error) {
-      const discordChannelLog = discordBot.channels.cache.get(DISCORD_BOT_LOGGING_CHANNEL_ID) as TextChannel;
-      discordChannelLog.send(`Error on mass ping message for PR: ${pr.name}`);
+      sendDiscordLoggingMessage(`Error on mass ping message for PR: ${pr.name}`);
     }
   }
 }
