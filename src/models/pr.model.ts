@@ -50,7 +50,7 @@ const PRSchema = new Schema({
   },
   mandatoryGSheet: {
     type: Boolean,
-    required: true,
+    required: false,
   },
   video: {
     type: String,

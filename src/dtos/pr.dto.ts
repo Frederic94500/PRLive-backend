@@ -166,6 +166,10 @@ export class UpdatePRDto {
   @IsNotEmpty()
   public mustBe: number;
 
+  @IsOptional()
+  @IsBoolean()
+  public mandatoryGSheet?: boolean;
+
   @IsArray()
   @ValidateNested({ each: true })
   @Type(() => SongListDto)

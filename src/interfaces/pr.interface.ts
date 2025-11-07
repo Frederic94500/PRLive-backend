@@ -17,7 +17,7 @@ export interface PR {
   mustBe: number;
   threadId: string;
   serverId: string;
-  mandatoryGSheet: boolean;
+  mandatoryGSheet?: boolean;
   video?: string;
   affinityImage?: string;
   prStats?: string;
