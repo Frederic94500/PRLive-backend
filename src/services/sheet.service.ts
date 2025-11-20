@@ -3,6 +3,7 @@ import discordBot, { addDiscordUserInThread, removeDiscordUserInThread } from '@
 
 import { HttpException } from '@/exceptions/httpException';
 import { PR } from '@/interfaces/pr.interface';
+import { SorterSheet } from '@/interfaces/sheet.interface';
 import { PRModel } from '@/models/pr.model';
 import { ServerModel } from '@/models/server.model';
 import { Service } from 'typedi';
@@ -12,6 +13,8 @@ import { User } from '@/interfaces/user.interface';
 import { UserModel } from '@/models/user.model';
 import { hashKey } from '@/utils/toolbox';
 import { createSpreadsheet, importSpreadsheetToSheet } from './google.service';
+import { ServerURL } from '@/enums/server.enum';
+import { SongSorter, Song } from '@/interfaces/song.interface';
 
 @Service()
 export class SheetService {
@@ -223,6 +226,48 @@ export class SheetService {
     await SheetModel.findByIdAndUpdate(sheet._id, sheet);
 
     return sheet;
+  }
+
+  private songListSorterParser(pr: PR, user: User): SongSorter[] {
+    return pr.songList.map((song: Song) => {
+      return {
+        uuid: song.uuid,
+        id: song.orderId,
+        anime: song.source ? `${song.source} - ${song.type}` : `${song.type}`,
+        name: `"${song.title}" by ${song.artist}`,
+        video: song.urlVideo.includes('http') ? song.urlVideo : ServerURL[user.server] + song.urlVideo,
+        mp3: song.urlAudio.includes('http') ? song.urlAudio : ServerURL[user.server] + song.urlAudio
+      }
+    })
+  }
+
+  public async sorterSheet(prId: string, voterId: string, sheetId: string): Promise<SorterSheet> {
+    const pr = await PRModel.findById(prId);
+    if (!pr) {
+      throw new HttpException(404, `PR doesn't exist`);
+    }
+
+    const sheet = await SheetModel.findOne({ prId: prId, voterId: voterId });
+    if (!sheet) {
+      throw new HttpException(404, 'Sheet not found');
+    }
+    if (sheet._id != sheetId) {
+      throw new HttpException(403, 'Sheet id does not correspond')
+    }
+
+    const user = await UserModel.findOne({discordId: voterId});
+
+    const songList: SongSorter[] = this.songListSorterParser(pr, user);
+
+    return {
+      sheetId,
+      prId,
+      voterId,
+      latestUpdate: sheet.latestUpdate,
+      name: sheet.name,
+      image: sheet.image,
+      songList
+    }
   }
 
   public async deleteSheetUser(prId: string, voterId: string, creator: boolean = false): Promise<void> {

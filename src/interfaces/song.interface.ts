@@ -94,3 +94,12 @@ export interface TieSong {
   urlAudio: string;
   totalRank: number;
 }
+
+export interface SongSorter {
+  uuid: string;
+  id: number;
+  anime: string;
+  name: string;
+  video: string;
+  mp3: string;
+}

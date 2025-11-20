@@ -4,6 +4,7 @@ import Container from 'typedi';
 import { Sheet } from '@/interfaces/sheet.interface';
 import { SheetService } from '@/services/sheet.service';
 import { sendJSON } from '@/utils/toolbox';
+import { SorterSheet } from '@/interfaces/sheet.interface';
 
 export class SheetController {
   public sheetService = Container.get(SheetService);
@@ -108,6 +109,19 @@ export class SheetController {
     } catch (error) {
       console.log(error);
       sendJSON(res, error.status, error);
+    }
+  };
+
+  public sorterSheet = async (req: Request, res: Response) => {
+    try {
+      const prId: string = req.params.id;
+      const voterId: string = req.params.voterId;
+      const sheetId: string = req.params.sheetId;
+      const sorterPR: SorterSheet = await this.sheetService.sorterSheet(prId, voterId, sheetId);
+
+      sendJSON(res, 200, sorterPR);
+    } catch (error) {
+      sendJSON(res, error.status, error.message);
     }
   };
 

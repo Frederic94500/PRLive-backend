@@ -1,3 +1,5 @@
+import { SongSorter } from "./song.interface";
+
 export interface SheetSimple {
     prId: string;
     status: string;
@@ -20,4 +22,14 @@ export interface SheetSong {
     rank: number;
     score: number;
     comment?: string;
+}
+
+export interface SorterSheet {
+  sheetId: string;
+  prId: string;
+  voterId: string;
+  latestUpdate: string;
+  name: string;
+  image?: string;
+  songList: SongSorter[];
 }

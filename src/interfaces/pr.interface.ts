@@ -93,7 +93,7 @@ export interface GSheetOutputPR {
   gsheets: {
     userId: string,
     id: string,
-    create?: boolean
+    create?: boolean,
     error?: string
   }[]
 }
