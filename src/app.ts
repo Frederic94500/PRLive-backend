@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 
-import { CREDENTIALS, DB_DATABASE, DB_HOST, DB_PASSWORD, DB_USER, LOG_FORMAT, NODE_ENV, ORIGIN, PORT, SECRET_KEY } from '@config';
+import { CREDENTIALS, DB_DATABASE, DB_HOST, DB_PASSWORD, DB_USER, LOG_FORMAT, NODE_ENV, ORIGIN, PORT, SECRET_KEY, SORTERPR } from '@config';
 import { logger, stream } from '@utils/logger';
 
 import { ErrorMiddleware } from '@middlewares/error.middleware';
@@ -60,7 +60,7 @@ export class App {
 
   private initializeMiddlewares() {
     this.app.use(morgan(LOG_FORMAT, { stream }));
-    this.app.use(cors({ origin: ORIGIN, credentials: CREDENTIALS }));
+    this.app.use(cors({ origin: [ORIGIN, SORTERPR], credentials: CREDENTIALS }));
     this.app.use(hpp());
     this.app.use(helmet());
     this.app.use(compression());
