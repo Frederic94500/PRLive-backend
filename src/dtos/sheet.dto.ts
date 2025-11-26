@@ -1,4 +1,4 @@
-import { IsArray, IsNotEmpty, IsNumber, IsString, IsUUID, MaxLength, MinLength, ValidateNested, isNumber } from "class-validator";
+import { IsArray, IsNotEmpty, IsNumber, IsOptional, IsString, IsUUID, MaxLength, MinLength, ValidateNested, isNumber } from "class-validator";
 
 import { SheetSong } from "@/interfaces/sheet.interface";
 import { Type } from "class-transformer";
@@ -28,8 +28,7 @@ export class SheetSongDto {
   @IsNotEmpty()
   public orderId: number;
 
-
-  // limit the length of comment 0 to 128 characters
+  @IsOptional()
   @IsString()
   @MaxLength(128, { message: 'Comment is too long' })
   public comment?: string;
